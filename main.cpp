@@ -2,6 +2,7 @@
 #include <chrono>   // for time measurement
 #include <cstdio>   // for printf
 #include <cstdint>
+#include <cinttypes>
 #undef __STRICT_ANSI__
 #include <cmath>
 #include <omp.h>
@@ -12,7 +13,7 @@
 
 // incldue stbmaster
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+#include <stb/stb_image_write.h>
 
 // include glc
 #include <GL/glc.h>
@@ -236,7 +237,7 @@ int main()
     omp_set_num_threads(omp_get_max_threads());                 // use all aviable processors for rendering
     printf("Using %d processors.\n", omp_get_max_threads());
 
-    std::chrono::time_point t0_render = std::chrono::high_resolution_clock::now();                              // time before rendering
+    std::chrono::time_point<std::chrono::system_clock> t0_render = std::chrono::high_resolution_clock::now();   // time before rendering
     #pragma omp parallel for
     for(size_t y=0; y<SCR_HEIGHT; y++)                          // iterate through the image
     {
@@ -247,15 +248,15 @@ int main()
             pixelbuff[atXY(x, y, SCR_WIDTH)] = shader(ndc_x, ndc_y);
         }
     }
-    std::chrono::time_point t1_render = std::chrono::high_resolution_clock::now();                              // time after rendering
+    std::chrono::time_point<std::chrono::system_clock> t1_render = std::chrono::high_resolution_clock::now();   // time after rendering
     int64_t t_render = std::chrono::duration_cast<std::chrono::milliseconds>(t1_render - t0_render).count();    // get time duration of image rendering operation
-    printf("Rendering time: %I64dms\n", t_render);
+    printf("Rendering time: %" PRId64 "ms\n", t_render);
 
-    std::chrono::time_point t0_out = std::chrono::high_resolution_clock::now();                             // time before writing
-    stbi_write_png("rt_output.png", SCR_WIDTH, SCR_HEIGHT, 3, pixelbuff, SCR_WIDTH * sizeof(Color3ui8));    // print image
-    std::chrono::time_point t1_out = std::chrono::high_resolution_clock::now();                             // time after writing
-    int64_t t_out = std::chrono::duration_cast<std::chrono::milliseconds>(t1_out - t0_out).count();         // get time duration of image writing operation
-    printf("Writing time: %I64dms\n", t_out);
+    std::chrono::time_point<std::chrono::system_clock> t0_out = std::chrono::high_resolution_clock::now();      // time before writing
+    stbi_write_png("rt_output.png", SCR_WIDTH, SCR_HEIGHT, 3, pixelbuff, SCR_WIDTH * sizeof(Color3ui8));        // print image
+    std::chrono::time_point<std::chrono::system_clock> t1_out = std::chrono::high_resolution_clock::now();      // time after writing
+    int64_t t_out = std::chrono::duration_cast<std::chrono::milliseconds>(t1_out - t0_out).count();             // get time duration of image writing operation
+    printf("Writing time: %" PRId64 "\n", t_out);
 
     delete(pixelbuff);  // delete pixel buffer
     return 0;
