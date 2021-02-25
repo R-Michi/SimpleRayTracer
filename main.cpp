@@ -25,7 +25,8 @@
 #define SCR_HEIGHT  (540 * 4)
 #define SCR_ASPECT  ((float)SCR_WIDTH / (float)SCR_HEIGHT)
 #define SCR_PIXELS  (SCR_WIDTH * SCR_HEIGHT)
-#define NUM_SPHERES 5
+#define NUM_SPHERES 6
+#define RAND_SEED   1845
 
 #define atXY(x, y, stride) \
         (y * stride + x)
@@ -61,12 +62,15 @@ struct Ray
 
 struct Sphere
 {
-    glm::vec3 color;
+    Material mat;
     glm::vec3 center;
     float radius;
 };
 
 /* FUNCTION DECLARATION */
+
+// returns a random float in the range of 0 and 1
+float random_float_01(void);
 
 // Clears the color of the image
 // r, g, b represents the clear color
@@ -75,6 +79,17 @@ void clear_color(Color3ui8* buff, float r, float g, float b);
 // Function finds the intersection of the closest sphere
 /// @return distance from the origin to the closest hitpoint
 float intersection_sphere(const Sphere* spheres, size_t num_spheres, const Ray& ray, float ray_max_length, int* hit_sphere);
+
+/**
+ *  Function to define the output color of the raytracing iteration
+ *  @param cc -> color of the current iteration
+ *  @param pc -> color of the previous iteration
+ *  @param old_ray -> the ray used for the current iteration
+ *  @param new_ray -> the ray used for the next iteration
+ *  @param recursion -> number of the current iteration of the recursion
+ *  @param primitive_id -> id of the intersected primitive
+ */
+glm::vec3 rt_result_qery(const glm::vec3& cc, const glm::vec3& pc, const Ray& old_ray, const Ray& new_ray, int recursion, int primitive_id);
 
 // Begins the ray-tracing process
 glm::vec3 trace_ray(const Ray& ray, int recursions);
@@ -87,39 +102,131 @@ glm::vec3 shader(float x, float y);
 Sphere spheres[NUM_SPHERES] = 
 {
     {
-        {0.0f, 1.0f, 1.0f},
+        {
+            {1.0f, 1.0f, 1.0f},
+            0.2f,
+            0.8f
+        },
+        {-1.1f, 0.0f, 2.0f},
+        1.0f
+    },
+    {
+        {
+            {1.0f, 1.0f, 1.0f},
+            0.2,
+            0.8
+        },
+        {1.1f, 0.0f, 2.0f},
+        1.0f
+    },
+    {
+        {
+            {1.0f, 1.0f, 1.0f},
+            0.2,
+            0.8
+        },
+        {0.0f, 1.8f, 2.0f},
+        1.0f
+    },
+    {
+        {
+            {1.0f, 1.0f, 1.0f},
+            0.2,
+            0.8
+        },
+        {0.0f, -1.8f, 2.0f},
+        1.0f
+    },
+    {
+        {
+            {1.0f, 1.0f, 1.0f},
+            0.2,
+            0.8
+        },
+        {0.0f, 0.0f, 3.8f},
+        1.0f
+    },
+    {
+        {
+            {1.0f, 1.0f, 1.0f},
+            0.2,
+            0.8
+        },
+        {0.0f, 0.0f, 0.2f},
+        1.0f
+    }
+    
+};
+
+#if 0
+Sphere spheres[NUM_SPHERES] = 
+{
+    {
+        {
+            {0.0f, 1.0f, 1.0f},
+            0.3f,
+            0.0f
+        },
         {0.0f, 0.0f, 4.0f},
         1.0f
     },
     {
-        {1.0f, 0.0f, 0.0f},
+        {
+            {1.0f, 0.0f, 0.0f},
+            0.7,
+            0.3
+        },
         {2.0f, 1.0f, 7.0f},
         0.5f
     },
     {
-        {0.0f, 0.0f, 1.0f},
+        {
+            {0.0f, 0.0f, 1.0f},
+            0.3f,
+            0.2f
+        },
         {-1.0f, 2.0f, 5.0f},
         0.7f,
     },
     {
-        {0.0f, 1.0f, 0.0f},
+        {
+            {0.0f, 1.0f, 0.0f},
+            0.2f,
+            0.8f
+        },
         {0.5f, -0.5f, 2.0f},
         0.3f
     },
     {
-        {1.0f, 1.0f, 0.0f},
+        {
+            {1.0f, 1.0f, 0.0f},
+            0.5f,
+            0.5f
+        },
         {-7.0f, -3.5f, 10.0f},
         2.5f
     }
 };
+#endif
 
 Light _light = 
 {
     {-1.0f, 1.0f, -1.0f},
-    {3.0f, 3.0f, 3.0f}
+    {7.0f, 7.0f, 7.0f}
 };
 
 /* FUNCTION IMPLEMANTATION */
+
+float random_float_01(void)
+{
+    static bool first = true;
+    if(first)
+    {
+        srand(RAND_SEED);
+        first = false;
+    }
+    return (rand() % 64) / 64.0f;
+}
 
 void clear_color(Color3ui8* buff, float r, float g, float b)
 {
@@ -173,6 +280,18 @@ float intersection_sphere(const Sphere* spheres, size_t num_spheres, const Ray& 
     return t;
 }
 
+glm::vec3 rt_result_qery(const glm::vec3& cc, const glm::vec3& pc, const Ray& old_ray, const Ray& new_ray, int recursion, int primitive_id)
+{
+    const Material& mat = spheres[primitive_id].mat;
+    glm::vec3 absorption(mat.roughness);
+    glm::vec3 reflection(1.0f - mat.roughness);
+
+    // preveous color is the reflective part
+    // current color is the absorbed part
+    // COLOR = ABSORPTION + REFLECTION = 100%
+    return absorption * cc + reflection * pc;
+}
+
 glm::vec3 trace_ray(const Ray& ray, int recursions)
 {
     glm::vec3 color = {0.0f, 0.0f, 0.0f};
@@ -183,32 +302,29 @@ glm::vec3 trace_ray(const Ray& ray, int recursions)
 
     constexpr float ray_max_length = 100.0f;
 
-    int hit_sphere;
+    int hit_sphere = -1;
     float t = intersection_sphere(spheres, NUM_SPHERES, ray, ray_max_length, &hit_sphere);  // find intersection
 
     if(t == ray_max_length)             // black color if there is no intersection
         return {0.0f, 0.0f, 0.0f};
     else                                // if there is an intersection
     {
-        Material material;
-        material.albedo     = spheres[hit_sphere].color;
-        material.roughness  = 0.3f;
-        material.metallic   = 0.0f;
+        const Material& cur_mat = spheres[hit_sphere].mat;
 
         glm::vec3 I = ray.origin + t * ray.direction;                   // intersection point
         glm::vec3 V = -ray.direction;                                   // view vector
         glm::vec3 N = glm::normalize(I - spheres[hit_sphere].center);   // normal vector
 
-        glm::vec3 intensity = light(_light, material, V, N);
-        color = material.albedo * 0.1f + intensity;
+        glm::vec3 intensity = light(_light, cur_mat, V, N);
+        color = cur_mat.albedo * 0.1f + intensity;
 
         new_ray.origin      = I;
         new_ray.direction   = glm::reflect(ray.direction, N);
     }
 
     // trace the next recursion
-    color += trace_ray(new_ray, --recursions);
-    return color;
+    glm::vec3 prev_color = trace_ray(new_ray, recursions-1);
+    return rt_result_qery(color, prev_color, ray, new_ray, recursions, hit_sphere);
 }
 
 glm::vec3 shader(float x, float y)
@@ -223,7 +339,7 @@ glm::vec3 shader(float x, float y)
     ray.direction = glm::normalize(point_img_plane - origin);
 
     // render the image in hdr
-    glm::vec3 hdr_color = trace_ray(ray, 3);    // begin ray-tracing process                              
+    glm::vec3 hdr_color = trace_ray(ray, 10);    // begin ray-tracing process                              
     glm::vec3 ldr_color = hdr_color / (hdr_color + glm::vec3(1.0f));    // convert to ldr
 
     return ldr_color;
