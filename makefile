@@ -18,7 +18,7 @@ $(ODIR)/%.o: % $(DEPS)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 full:
-	make link
+	make build
 
 build: $(OBJ)
 	$(CC) -o $(EXE) $(OBJ) $(LFLAGS)
