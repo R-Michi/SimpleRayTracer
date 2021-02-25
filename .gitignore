@@ -1,0 +1,5 @@
+rt_output.png
+lib/*
+.vscode
+obj
+ray_tracing.exe
