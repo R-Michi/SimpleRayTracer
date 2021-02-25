@@ -1,5 +1,6 @@
 rt_output.png
-lib/*
+lib/glm
+lib/stb_master
 .vscode
-obj
+obj/*
 ray_tracing.exe
