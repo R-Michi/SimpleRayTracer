@@ -27,8 +27,10 @@
 #define SCR_HEIGHT  (540 * 4)
 #define SCR_ASPECT  ((float)SCR_WIDTH / (float)SCR_HEIGHT)
 #define SCR_PIXELS  (SCR_WIDTH * SCR_HEIGHT)
-#define NUM_SPHERES 2
-#define RAND_SEED   1845
+#define NUM_SPHERES 3
+#define RAND_SEED   0
+
+#define INTERSECTION_CONSIDER_INSIDE    0x1
 
 #define atXY(x, y, stride) (y * stride + x)
 
@@ -63,7 +65,7 @@ struct Ray
 
 struct Sphere
 {
-    Material mat;
+    Material mtl;
     glm::vec3 center;
     float radius;
 };
@@ -88,10 +90,11 @@ void clear_color(Color3ui8* buff, float r, float g, float b);
  *  @param n_spheres -> The number of the spheres.
  *  @param ray -> The ray that is tested if it intersects with a sphere.
  *  @param ray_max_length -> The maximum length of the ray. Similar to the render distance.
+ *  @param flags -> Can change the way how intersection is calculated.
  *  @return @param primitive_id -> The id of the sphere (primitive) that the ray intersected with.
  *  @return -> The length of the ray-origin to the closest intersection point.
  */
-float intersection_sphere(const Sphere* spheres, size_t n_spheres, const Ray& ray, float ray_max_length, int* primitive_id);
+float intersection_sphere(const Sphere* spheres, size_t n_spheres, const Ray& ray, float ray_max_length, int* primitive_id, int flags);
 
 /**
  *  Combutes how much an object is in shadow.
@@ -116,24 +119,32 @@ float shadow(const Sphere* spheres, size_t n_spheres, const Ray& shadow_ray, flo
 float sdf(const Sphere* spheres, size_t n_spheres, const glm::vec3& p, float ray_max_length, int* primitive_id);
 
 /**
- *  Function to define the output color of the raytracing iteration
- *  @param cc -> color of the current iteration
- *  @param pc -> color of the previous iteration
- *  @param old_ray -> the ray used for the current iteration
- *  @param new_ray -> the ray used for the next iteration
- *  @param recursion -> number of the current iteration of the recursion
- *  @param primitive_id -> id of the intersected primitive
- *  @return -> Resulting light intensity of the ray. (Resulting color)
- */
-glm::vec3 rt_result_qery(const glm::vec3& cc, const glm::vec3& pc, const Ray& old_ray, const Ray& new_ray, int recursion, int primitive_id);
-
-/**
  *  Begins the ray-tracing process.
  *  @param ray -> Ray to be traced.
  *  @param recursions -> The number of recursions to be called.
  *  @return -> The light intensity (color) of the intersecion.
  */
 glm::vec3 trace_ray(const Ray& ray, int recursions);
+
+/**
+ *  This shader gets called if there is an intersection with a sphere.
+ *  @param ray -> The ray that was traced to that intersction.
+ *  @param recursion -> The actual recursion of the ray-tracing process.
+ *  @param t -> The length of the vector from origin to the intersection.
+ *  @param t_max -> The maximum length of any ray.
+ *  @param primitive_id -> The id of the primitive (sphere) that was hit by the ray.
+ *  @return -> A color-value of the current intersection point.
+ */
+glm::vec3 closest_hit_shader(const Ray& ray, int recursion, float t, float t_max, int primitive_id);
+
+/**
+ *  This shader gets called if there is no intersection with any object in the scene.
+ *  @param ray -> The ray that was traced into the void.
+ *  @param recursion -> The actual recursion of the ray-tracing process.
+ *  @param t_max -> The maximum length of any ray.
+ *  @return -> A color-value if the ray misses.
+ */
+glm::vec3 miss_shader(const Ray& ray, int recursion, float t_max);
 
 /**
  *  The shader computes the color of a pixel at position x, y.
@@ -150,18 +161,30 @@ Sphere spheres[NUM_SPHERES] =
 {
     {
         {
+            {0.0f, 0.0f, 1.0f},
+            0.8f,
+            0.5f,
+            1.0f
+        },
+        {0.0f, 0.0f, 3.0f},
+        1.0f
+    },
+    {
+        {
             {0.0f, 1.0f, 0.0f},
             0.8f,
-            0.5f
+            0.5f,
+            1.0f
         },
-        {-1.75f, 0.0f, 3.0f},
+        {3.0f, 0.0f, 3.0f},
         1.0f
     },
     {
         {
             {1.0f, 1.0f, 1.0f},
             0.7f,
-            0.0f
+            0.0f,
+            1.0f
         },
         {-1.75f, -1001.0f, 3.0f},
         1000.0f
@@ -305,7 +328,7 @@ void clear_color(Color3ui8* buff, float r, float g, float b)
         buff[i] = glm::vec3(r, g, b);       // ... and set it the the given color.
 }
 
-float intersection_sphere(const Sphere* spheres, size_t n_spheres, const Ray& ray, float ray_max_length, int* primitive_id)
+float intersection_sphere(const Sphere* spheres, size_t n_spheres, const Ray& ray, float ray_max_length, int* primitive_id, int flags)
 {
     float t = ray_max_length;                               // distance from the origin to the closest hitpoint
     for(size_t i=0; i<n_spheres; i++)                     // iterate through all spheres
@@ -327,23 +350,38 @@ float intersection_sphere(const Sphere* spheres, size_t n_spheres, const Ray& ra
                 t0 = t1 = -0.5f * (b / a);
             else                                            // if they are not the same, use the standard formula
             {
-                t0 = (-b + sqrt(delta)) / (2 * a);
-                t1 = (-b - sqrt(delta)) / (2 * a);
+                t0 = (-b - sqrt(delta)) / (2 * a);
+                t1 = (-b + sqrt(delta)) / (2 * a);
             }
 
-            if(t1 < t0)                                     // make t0 always the closest hitpoint
-                std::swap(t0, t1);
-
-            bool valid = true;
-            if(t0 < 0.0f || t1 < 0.0f)      valid = false;  // not valid if sphere is behind or in the origin
-            else if(t0 > ray_max_length)    valid = false;  // not valid if sphere is outside the render distance
-
-            // update closest hitpoint if result is valid and current hitpoint is closer than the current closest hitpoint
-            if(valid && t0 < t)
+            /** 
+             *  The intersection test can ba made with fewer lines of code.
+             *  However, my aim was to minimize the number of comparisons needed to get the final result.
+             * 
+             *  The first check is if the sphere is within the render distance, if not there are no more comparions needed.
+             *  The second check is if the sphere in front of us.
+             *  The third check is if we are within the sphere.
+             * 
+             *  Note: The order of the second and third check is important, since there are more objects in front of us, than within us.
+             *  This will result in less comparisons in total.
+             * 
+             *  Also important is that we are testing the closest intersection t0 at first at this determines if we are in front of or
+             *  within the sphere. This also results in less comparisons.
+             */
+            if(t0 < ray_max_length)
             {
-                if(primitive_id != nullptr)
-                    *primitive_id = i;
-                t = t0;
+                if(t0 >= 0.0f && t1 >= 0.0f && t0 < t)
+                {
+                    if(primitive_id != nullptr)
+                        *primitive_id = i;
+                    t = t0;
+                }
+                else if(flags & INTERSECTION_CONSIDER_INSIDE && t0 < 0.0f && t1 >= 0.0f && t1 < t)
+                {
+                    if(primitive_id != nullptr)
+                        *primitive_id = i;
+                    t = t1;
+                }
             }
         }
     }
@@ -390,77 +428,96 @@ float sdf(const Sphere* spheres, size_t n_spheres, const glm::vec3& p, float ray
     return d;
 }
 
-glm::vec3 rt_result_qery(const glm::vec3& cc, const glm::vec3& pc, const Ray& old_ray, const Ray& new_ray, int recursion, int primitive_id)
-{
-    const Material& mat = spheres[primitive_id].mat;
-    glm::vec3 absorption(mat.roughness);
-    glm::vec3 reflection(1.0f - mat.roughness);
-
-    // preveous color is the reflective part
-    // current color is the absorbed part
-    // COLOR = ABSORPTION + REFLECTION = 100%
-    return absorption * cc + reflection * pc;
-}
-
 glm::vec3 trace_ray(const Ray& ray, int recursions)
 {
-    glm::vec3 color = {0.0f, 0.0f, 0.0f};       // initialize color of the current ray to black that is has no contribution
-    Ray new_ray = ray;                          // initialize the new ray to the old ray
+    static constexpr float RAY_MAX_LENGTH = 100.0f;     // Maximum length of any ray (render distance / z-far)
+    glm::vec3 out_color = {0.0f, 0.0f, 0.0f};           // initialize color of the current ray to black that is has no contribution
 
-    if(recursions == 0)                         // all recursions ran through, so we can end the ray-tracing process
-        return color;
+    if(recursions == 0)                                 // all recursions ran through, so we can end the ray-tracing process
+        return out_color;
 
-    constexpr float RAY_MAX_LENGTH = 100.0f;    // Maximum length of any ray (render distance / z-far)
+    int primitive_id = -1;                              // The id of the primitive (sphere) that was hit
+    float t = intersection_sphere(spheres, NUM_SPHERES, ray, RAY_MAX_LENGTH, &primitive_id, 0);  // find intersection
 
-    int hit_sphere = -1;                        // The if of the sphere that was hit
-    float t = intersection_sphere(spheres, NUM_SPHERES, ray, RAY_MAX_LENGTH, &hit_sphere);  // find intersection
-
-    if(t == RAY_MAX_LENGTH)                     // if there is no intersection
-        return {0.0f, 0.0f, 0.0f};
-    else                                        // if there is an intersection
-    {
-        const Material& cur_mat = spheres[hit_sphere].mat;
-
-        glm::vec3 I = ray.origin + t * ray.direction;                   // intersection point
-        glm::vec3 V = -ray.direction;                                   // view vector
-        glm::vec3 N = glm::normalize(I - spheres[hit_sphere].center);   // normal vector
-        float NdotL = glm::dot(_light.direction, N);                    // cos(phi) of light vector and normal vector
-
-        glm::vec3 intensity = light(_light, cur_mat, V, N);             // get light intensity at current position
-
-        // Combute shadow
-        Ray shadow_ray = {glm::normalize(_light.direction), I};
-        float shadow_value = 0.0f;
-        // An optimization: We dont need to calculate the casted shadow if the angle between the light vector and the surface is greater than 90 degrees.
-        if(NdotL > 0.0f)
-            shadow_value = shadow(spheres, NUM_SPHERES, shadow_ray, RAY_MAX_LENGTH, 10.0f);
-        
-        // combute final light intensity of the current point
-        color = cur_mat.albedo * 0.3f + intensity * shadow_value;
-
-        // let the ray of the next recursion reflect, so we can combute reflections
-        new_ray.origin      = I;
-        new_ray.direction   = glm::reflect(ray.direction, N);
-    }
+    if(t < RAY_MAX_LENGTH)                              // if there is an intersection
+        out_color = closest_hit_shader(ray, recursions, t, RAY_MAX_LENGTH, primitive_id);
+    else                                                // if there is no intersection
+        out_color = miss_shader(ray, recursions, RAY_MAX_LENGTH);
 
     // trace the next recursion
-    glm::vec3 prev_color = trace_ray(new_ray, recursions-1);
-    return rt_result_qery(color, prev_color, ray, new_ray, recursions, hit_sphere);
+    return out_color;
+}
+
+glm::vec3 closest_hit_shader(const Ray& ray, int recursion, float t, float t_max, int primitive_id)
+{
+    glm::vec3 out_color;                                                                // output/result color
+    Sphere* hit_sphere = spheres + primitive_id;                                        // intersected sphere
+
+    glm::vec3 I = ray.origin + (t + 0.0001f) * ray.direction;                           // intersection point
+    glm::vec3 N = glm::normalize(I - hit_sphere->center);                               // surface's normal vector at the intersection point
+
+    // combute absorption
+    glm::vec3 light_intensity   = light(_light, hit_sphere->mtl, -ray.direction, N);    // combute surface's light intensity
+
+    // combute shadow
+    Ray shadow_ray = {_light.direction, I};
+    float shadow_value = 0.0f;
+    if(glm::dot(_light.direction, N) > 0.0f)
+        shadow_value = shadow(spheres, NUM_SPHERES, shadow_ray, t_max, 10.0f);
+
+    glm::vec3 absorb_light      = hit_sphere->mtl.albedo * 0.3f + light_intensity * shadow_value;      // final aborbed light intensity
+
+    // combute reflection
+    Ray reflect_ray         = {glm::normalize(glm::reflect(ray.direction, N)), I};      // let the incoming light ray reflect around the surface's normal vector
+    glm::vec3 reflect_light = trace_ray(reflect_ray, recursion-1);                      // trace the reflected ray
+
+    // combute refraction
+    static constexpr float n_air        = 1.0f;                                         // refraction index of air
+    static constexpr float n_glass      = 1.52f;                                        // refraction index of glass
+    static constexpr float n_ratio      = n_air / n_glass;
+    static constexpr float n_ratio_inv  = n_glass / n_air;
+
+    Ray refract_ray     = {glm::refract(ray.direction, N, n_ratio), I};                 // let the incoming light ray refract at the entrance of the sphere
+
+    float t_back        = intersection_sphere(hit_sphere, 1, refract_ray, t_max, nullptr, INTERSECTION_CONSIDER_INSIDE);    // back-side intersection
+    glm::vec3 i_back    = refract_ray.origin + (t_back - 0.0001f) * refract_ray.direction;                                  // intersection point of the back-side
+    glm::vec3 n_back    = glm::normalize(hit_sphere->center - i_back);                                                      // surface's normal vector at the back-side intersection point
+
+    refract_ray.direction   = glm::refract(refract_ray.direction, n_back, n_ratio_inv); // let the light ray refract a second time at the outrance of the sphere
+    refract_ray.origin      = i_back;
+    glm::vec3 refract_light = trace_ray(refract_ray, recursion-1);                      // trace the refracted ray
+
+    // calculate final color result -> A + R + T = 100%
+    const float absorb  = hit_sphere->mtl.roughness;
+    const float reflect = 1.0f - hit_sphere->mtl.roughness;
+
+    out_color = hit_sphere->mtl.apha * (absorb * absorb_light + reflect * reflect_light) + (1.0f - hit_sphere->mtl.apha) * refract_light;
+    return out_color;
+}
+
+glm::vec3 miss_shader(const Ray& ray, int recursion, float t_max)
+{
+    return {0.0f, 0.0f, 0.0f};
 }
 
 glm::vec3 shader(float x, float y)
 {
-    // line-image_plane-intersection
-    glm::vec3 origin = {0.0f, 0.0f, 0.0f};
-    glm::vec3 point_img_plane = {x, y, 1.5f};   // with the used screen ratio (1.77777) -> 1.5 results in ~100° FOV
+    x *= SCR_ASPECT;
+
+    glm::vec3 origin    = {0.0f, 0.0f, -5.0f};                                                   // origin of the camera
+    glm::vec3 look_at   = {2.0f, 0.0f, 0.0f};                                               // direction/point the camere is looking at
+
+    glm::vec3 cam_z     = glm::normalize(look_at - origin);                                 // z-direction of the camera
+    glm::vec3 cam_x     = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cam_z));   // x-diretion of the camera
+    glm::vec3 cam_y     = glm::cross(cam_z, cam_x);                                         // y-direction of the camera
 
     // generate ray
     Ray ray;
     ray.origin = origin;
-    ray.direction = glm::normalize(point_img_plane - origin);
+    ray.direction = glm::normalize(x * cam_x + y * cam_y + 1.5f * cam_z);                   // rotated intersection with the image plane
 
     // render the image in hdr
-    glm::vec3 hdr_color = trace_ray(ray, 5);    // begin ray-tracing process                              
+    glm::vec3 hdr_color = trace_ray(ray, 2);    // begin ray-tracing process                              
     glm::vec3 ldr_color = hdr_color / (hdr_color + glm::vec3(1.0f));    // convert to ldr
 
     return ldr_color;
@@ -480,7 +537,7 @@ int main()
     {
         for(size_t x=0; x<SCR_WIDTH; x++)
         {
-            float ndc_x = gl::convert::from_pixels_pos_x(x, SCR_WIDTH) * SCR_ASPECT;
+            float ndc_x = gl::convert::from_pixels_pos_x(x, SCR_WIDTH);
             float ndc_y = gl::convert::from_pixels_pos_y(y, SCR_HEIGHT);
             pixelbuff[atXY(x, y, SCR_WIDTH)] = shader(ndc_x, ndc_y);
         }
