@@ -242,6 +242,23 @@ float intersection_sphere(const rt::Sphere* const * spheres, size_t n_spheres, c
     return t;
 }
 
+float intersection(const rt::Sphere* const * spheres, size_t n_spheres, const rt::Ray& ray, float t_max, const rt::Sphere** prim, int flags)
+{
+    float t = t_max;
+    float t_cur;
+    for(size_t i=0; i<n_spheres; i++)
+    {
+        t_cur = spheres[i]->intersect(ray, t_max, flags);
+        if(t_cur < t)
+        {
+            if(prim != nullptr)
+                *prim = spheres[i];
+            t = t_cur;
+        }
+    }
+    return t;
+}
+
 float shadow(const rt::Sphere* const * spheres, size_t n_spheres, const rt::Ray& shadow_ray, float t_max, float softness)
 {
     float t = 0.15f;                                                        // A small bias to minimize the render artefacts.
@@ -291,7 +308,7 @@ glm::vec3 trace_ray(const rt::Ray& ray, int recursions)
         return out_color;
 
     const rt::Sphere* hit_sphere = nullptr;             // The id of the primitive (sphere) that was hit
-    float t = intersection_sphere(spheres, PRIM_COUNT, ray, RAY_MAX_LENGTH, &hit_sphere, 0);  // find intersection
+    float t = intersection(spheres, PRIM_COUNT, ray, 100.0f, &hit_sphere, 0);
 
     if(t < RAY_MAX_LENGTH)                              // if there is an intersection
         out_color = closest_hit_shader(ray, recursions, t, RAY_MAX_LENGTH, hit_sphere);
@@ -310,7 +327,7 @@ glm::vec3 closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t
     glm::vec3 N = glm::normalize(I - hit_sphere->center());                                 // surface's normal vector at the intersection point
 
     // combute absorption
-    glm::vec3 light_intensity   = light(_light, hit_sphere->material(), -ray.direction, N); // combute surface's light intensity
+    glm::vec3 light_intensity = light(_light, hit_sphere->material(), -ray.direction, N);   // combute surface's light intensity
 
     // combute shadow
     rt::Ray shadow_ray = {I, _light.direction};
@@ -318,7 +335,7 @@ glm::vec3 closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t
     if(glm::dot(_light.direction, N) > 0.0f)
         shadow_value = shadow(spheres, PRIM_COUNT, shadow_ray, t_max, 10.0f);
 
-    glm::vec3 absorb_light      = hit_sphere->material().albedo * 0.3f + light_intensity * shadow_value;      // final aborbed light intensity
+    glm::vec3 absorb_light = hit_sphere->material().albedo * 0.3f + light_intensity * shadow_value; // final aborbed light intensity
 
     // combute reflection
     rt::Ray reflect_ray     = {I, glm::normalize(glm::reflect(ray.direction, N))};      // let the incoming light ray reflect around the surface's normal vector
@@ -332,7 +349,7 @@ glm::vec3 closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t
 
     rt::Ray refract_ray = {I, glm::refract(ray.direction, N, n_ratio)};                 // let the incoming light ray refract at the entrance of the sphere
 
-    float t_back        = intersection_sphere(&hit_sphere, 1, refract_ray, t_max, nullptr, INTERSECTION_CONSIDER_INSIDE);   // back-side intersection
+    float t_back        = intersection(&hit_sphere, 1, refract_ray, t_max, nullptr, RT_INTERSECTION_CONSIDER_INSIDE);       // back-side intersecion
     glm::vec3 i_back    = refract_ray.origin + (t_back - 0.0001f) * refract_ray.direction;                                  // intersection point of the back-side
     glm::vec3 n_back    = glm::normalize(hit_sphere->center() - i_back);                                                    // surface's normal vector at the back-side intersection point
 
