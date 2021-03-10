@@ -5,16 +5,19 @@ CC	 = g++
 EXE = ./ray_tracing.exe
 
 ODIR = obj
-IDIR =.
+IDIR = .
 
-_DEPS = light.hpp
+_DEPS = rt/light.h \
+		rt/primitive.h \
+		rt/rt_types.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.cpp.o
+_OBJ = 	main.cpp.o \
+		rt/src/primitive.cpp.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: % $(DEPS)
-	mkdir obj || cd .
+	py ./makedir.py $(OBJ)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 full:
