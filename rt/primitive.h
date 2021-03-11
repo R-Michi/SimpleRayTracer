@@ -7,7 +7,34 @@ namespace rt
 {
     class Primitive
     {
+    protected:
+        Material _mtl;
+
     public:
+        /**
+         *  Default constructor.
+         *  No parameter.
+         */
+        Primitive(void) noexcept;
+
+        /**
+         *  @param mtl -> The primitives material properties. 
+         */
+        Primitive(const Material& mtl) noexcept;
+
+        // Destructor not used.
+        virtual ~Primitive(void) noexcept {}
+
+        /**
+         *  Sets the primitive's material properties.
+         *  @param mtl -> The sphere's material properties.
+         */
+        void set_material(const Material& mtl) noexcept;
+
+        /// @return -> The primitive's material prperties
+        inline const Material& material(void) const noexcept
+        {return this->_mtl;}
+
         /**
          *  Executes the intersection test for the current primitive.
          *  @param ray -> The ray that is tested if it intersects with a primitive.
@@ -30,7 +57,6 @@ namespace rt
     class Sphere : public Primitive
     {
     protected:
-        Material _mtl;      // Sphere's material properties
         glm::vec3 _center;  // Center of the sphere
         float _radius;      // Radius of the sphere
 
@@ -66,7 +92,7 @@ namespace rt
         Sphere& operator= (Sphere&& sphere) noexcept;
 
         // Destructor, not used.
-        virtual ~Sphere(void) noexcept;
+        virtual ~Sphere(void) noexcept {}
 
         /**
          *  Sets the properties of the sphere.
@@ -93,12 +119,6 @@ namespace rt
          *  @param radius -> Radius of the sphere.
          */
         void set_radius(float radius) noexcept;
-
-        /**
-         *  Sets the sphere's material properties.
-         *  @param mtl -> The sphere's material properties.
-         */
-        void set_material(const Material& mtl) noexcept;
         
         /// @return -> The center of the sphere in 3D-Space.
         inline const glm::vec3& center(void) const noexcept
@@ -107,10 +127,6 @@ namespace rt
         /// @return -> The radius of the sphere.
         inline float radius(void) const noexcept
         {return this->_radius;}
-
-        /// @return -> The sphere's material prperties.
-        inline const Material& material(void) const noexcept
-        {return this->_mtl;}
 
         // Intersection test for line(ray) - sphere - intersection.
         virtual float intersect(const Ray& ray, float t_max, int flags) const;
@@ -147,6 +163,9 @@ namespace rt
         // Move constructor.
         DistanceSphere(DistanceSphere&& sphere) noexcept;
 
+        // destructor not used
+        virtual ~DistanceSphere(void) noexcept {}
+
         // Intersection test for line(ray) - sphere - intersection.
         virtual float intersect(const Ray& ray, float t_max, int flags) const;
     };
@@ -154,7 +173,6 @@ namespace rt
     class InfPlane : public Primitive
     {
     private:
-        Material _mtl;          // The plane's material properties.
         glm::vec3 _direction;   // The direction of the plane.
         glm::vec3 _origin;      // The plane's origin
     
@@ -187,7 +205,7 @@ namespace rt
         InfPlane& operator= (InfPlane&& inf_plane) noexcept;
 
         // Destructor, not used.
-        virtual ~InfPlane(void) noexcept;
+        virtual ~InfPlane(void) noexcept {}
 
         /**
          *  Sets the properties of the plane.
@@ -215,12 +233,6 @@ namespace rt
          */
         void set_origin(const glm::vec3& origin) noexcept;
 
-        /**
-         *  Sets the plane's material properties.
-         *  @param mtl -> The plane's material properties.
-         */
-        void set_material(const Material& mtl) noexcept;
-
         /// @return -> The plane's direction.
         inline const glm::vec3& direction(void) const noexcept
         {return this->_direction;}
@@ -228,10 +240,6 @@ namespace rt
         /// @return -> The plane's origin in 3D-space.
         inline const glm::vec3& origin(void) const noexcept
         {return this->_origin;}
-
-        /// @return -> The plane's material properties.
-        inline const Material& material(void) const noexcept
-        {return this->_mtl;}
         
         // Intersection test for line(ray) - infinite plane - intersection.
         virtual float intersect(const Ray& ray, float t_max, int flags) const;

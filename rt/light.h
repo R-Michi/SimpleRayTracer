@@ -1,75 +1,66 @@
 #ifndef __ray_tracer_light__
 #define __ray_tracer_light__
 
-#undef __STRICT_ANSI__
-#include <cmath>
-#include <glm/glm.hpp>
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 #include "rt_types.h"
 
 namespace rt
 {
-    /* Light functions */
-    float distribution_GGX(const glm::vec3& N, const glm::vec3& H, float r)
+    namespace __rt_internal
     {
-        const float a = r*r;
-        const float a2 = a*a;
-        const float NdotH = glm::max(glm::dot(N, H), 0.0f);
-        const float NdotH2 = NdotH * NdotH;
-        const float denom = (NdotH2 * (a2 - 1.0f) + 1.0f);
+        /**
+         *  @LearnOpenGL: 
+         *  Normal distribution function: approximates the amount the surface's microfacets are aligned to the halfway vector, 
+         *  influenced by the roughness of the surface. 
+         *  This is the primary function that approximates the roughness of a surface.
+         * 
+         *  @param N -> The surface's normal vector.
+         *  @param H -> The halfway vector between the view and the normal vector.
+         *  @param r -> A scalar for the surface's roughness ranging fom 0.0 to 1.0.
+         */
+        float distribution_GGX(const glm::vec3& N, const glm::vec3& H, float r) noexcept;
 
-        return a2 / (M_PI * denom * denom);
+        /**
+         *  @LearnOpenGL:
+         *  Geometry function: describes the self-shadowing property of the microfacets. 
+         *  When a surface is relatively rough, the surface's microfacets can overshadow 
+         *  other microfacets reducing the light the surface reflects.
+         * 
+         *  @param NdotV -> Dot product between the normal and the view vector.
+         *  @param r -> A scalar for the surface's roughness ranging fom 0.0 to 1.0.
+         */
+        float geometry_schlick_GGX(float NdotV, float r) noexcept;
+
+        /**
+         *  @param N -> The surface's normal vector.
+         *  @param V -> View vector from the camera to the current point on the goemetry.
+         *  @param L -> The light direction.
+         *  @param r -> A scalar for the surface's roughness ranging fom 0.0 to 1.0.
+         */
+        float geometry_smith(const glm::vec3& N, const glm::vec3& V, const glm::vec3& L, float r) noexcept;
+
+        /**
+         *  @LearnOpenGL
+         *  Fresnel equation: The Fresnel equation describes the ratio of surface reflection at different surface angles.
+         * 
+         *  @param H -> The halfway vector between the view and the normal vector.
+         *  @param V -> View vector from the camera to the current point on the goemetry.
+         *  @param F0 -> Represents the base reflectivity of the surface.
+         */
+        glm::vec3 frensel_schlick(const glm::vec3& H, const glm::vec3& V, const glm::vec3& F0) noexcept;
     }
 
-    float geometry_schlick_GGX(float NdotV, float r)
-    {
-        //const float roughness = (r + 1.0f);
-        const float k = (r*r) / 8.0f;
-        const float denom = NdotV * (1.0f - k) + k;
-        return NdotV / denom;
-    }
-
-    float geometry_smith(const glm::vec3& N, const glm::vec3& V, const glm::vec3& L, float r)
-    {
-        const float NdotV = glm::max(glm::dot(N, V), 0.0f);
-        const float NdotL = glm::max(glm::dot(N, L), 0.0f);
-        const float ggx1 = geometry_schlick_GGX(NdotV, r);
-        const float ggx2 = geometry_schlick_GGX(NdotL, r);
-        return ggx1 * ggx2;
-    }
-
-    glm::vec3 frensel_schlick(const glm::vec3& H, const glm::vec3& V, const glm::vec3& F0)
-    {
-        const float cos_theta_inv = 1.0f - glm::max(glm::dot(H, V), 0.0f);
-        return F0 + (1.0f - F0) * powf(glm::max(cos_theta_inv, 0.0f), 5.0f);
-    }
-
-    glm::vec3 light(const Light& L, const Material& M, const glm::vec3& V, const glm::vec3 N)
-    {
-        // N & V are normalized
-
-        glm::vec3 F0(0.04f, 0.04f, 0.04f);
-        F0 = glm::mix(F0, M.albedo, M.metallic);
-        glm::vec3 L0(0.0f, 0.0f, 0.0f);
-
-        glm::vec3 H = glm::normalize(L.direction + V);
-        glm::vec3 radiance = L.intensity;
-
-        const float NDF = distribution_GGX(N, H, M.roughness);
-        const float G = geometry_smith(N, V, L.direction, M.roughness);
-        glm::vec3 F = frensel_schlick(H, V, F0);
-
-        glm::vec3 kd = glm::vec3(1.0f, 1.0f, 1.0f) - F;
-        kd *= 1.0f - M.metallic;
-
-        glm::vec3 numerator = NDF * F * G;
-        const float denom = 4.0f * glm::max(glm::dot(V, N), 0.0f) * glm::max(glm::dot(L.direction, N), 0.0f);
-        glm::vec3 specular = numerator / glm::max(denom, 0.001f);
-
-        float NdotL = glm::max(glm::dot(N, L.direction), 0.0f);
-        L0 += (kd * (M.albedo / (float)M_PI) + specular) * radiance * NdotL;
-
-        return L0;
-    }
+    /**
+     *  Calculates the light intensity of the surface.
+     *  @param L -> Light source.
+     *  @param M -> The surface's material parameter.
+     *  @param V -> View vector from the camera to the current point on the goemetry.
+     *  @param N -> The surface's normal vector.
+     *  @return -> Light intensity of the surface.
+     */
+    glm::vec3 light(const Light& L, const Material& M, const glm::vec3& V, const glm::vec3 N) noexcept;
 };
 #endif // __ray_tracer_light__
