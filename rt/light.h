@@ -9,6 +9,12 @@
 
 namespace rt
 {
+    /**
+     *  NOTE: This is the original light algorithm unreal engine 4 uses.
+     *  How this algorithm works is discribed at following link:
+     *  https://learnopengl.com/PBR/Theory
+     */
+
     namespace __rt_internal
     {
         /**
@@ -62,5 +68,5 @@ namespace rt
      *  @return -> Light intensity of the surface.
      */
     glm::vec3 light(const Light& L, const Material& M, const glm::vec3& V, const glm::vec3 N) noexcept;
-};
+}
 #endif // __ray_tracer_light__

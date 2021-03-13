@@ -1,7 +1,4 @@
 // include std libraries
-#include "rt/primitive.h"
-#include "rt/light.h"
-
 #include <chrono>   // for time measurement
 #include <cstdio>   // for printf
 #include <cstdint>
@@ -19,6 +16,9 @@
 
 // include glc
 #include <GL/glc.h>
+
+// include ray tracing
+#include "rt/ray_tracing.h"
 
 #define SCR_WIDTH       (960 * 4)
 #define SCR_HEIGHT      (540 * 4)

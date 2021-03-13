@@ -47,6 +47,6 @@ namespace rt
         float metallic;
         float apha;
     };
-};
+}
 
 #endif // __rt_types__

@@ -1,4 +1,4 @@
-#include "../primitive.h"
+#include "../infplane.h"
 
 #include <cmath>
 

@@ -1,4 +1,4 @@
-#include "../primitive.h"
+#include "../sphere.h"
 
 #include <cmath>
 

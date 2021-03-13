@@ -1,4 +1,4 @@
-#include "../primitive.h"
+#include "../distancesphere.h"
 
 using namespace rt;
 
