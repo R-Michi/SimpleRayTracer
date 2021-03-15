@@ -12,6 +12,9 @@
 #include "distancesphere.h"
 #include "infplane.h"
 
+// include primitive buffer
+#include "buffer.h"
+
 // include ray tracing application
     // coming soon
 

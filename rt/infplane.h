@@ -81,6 +81,14 @@ namespace rt
 
         // Distance from a 3D-point P to the closest point on the plane.
         virtual float distance(const glm::vec3& p) const;
+
+        /// @return -> A dynamic clone of the infinite plane.
+        virtual Primitive* clone_dynamic(void)
+        {return new InfPlane(*this);}
+
+        /// @return -> Size of the current infinite plane.
+        virtual size_t get_sizeof(void)
+        {return sizeof(InfPlane);}
     };
 }
 

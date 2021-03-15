@@ -84,6 +84,14 @@ namespace rt
 
         // Distance from a 3D-point P to the closest point on the sphere.
         virtual float distance(const glm::vec3& p) const;
+        
+        /// @return -> A dynamic clone of the sphere.
+        virtual Primitive* clone_dynamic(void)
+        {return new Sphere(*this);}
+
+        /// @return -> Size of the current sphere.
+        virtual size_t get_sizeof(void)
+        {return sizeof(Sphere);}
     };
 }
 

@@ -52,6 +52,16 @@ namespace rt
          *  NOTE: The distance does not cap at t_max.
          */
         virtual float distance(const glm::vec3& p) const = 0;
+
+        /** 
+         *  @return -> A dynamic clone of the own instance.
+         *  The memory does not free automantically.
+         *  To avoid memory leaks YOU have to free it yourself.
+         */
+        virtual Primitive* clone_dynamic(void) = 0;
+
+        /// @return -> The size of the primitive.
+        virtual size_t get_sizeof(void) = 0;
     };
 }
 

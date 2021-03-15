@@ -38,6 +38,14 @@ namespace rt
 
         // Intersection test for line(ray) - sphere - intersection.
         virtual float intersect(const Ray& ray, float t_max, int flags) const;
+
+        /// @return -> A dynamic clone of the distance sphere.
+        virtual Primitive* clone_dynamic(void)
+        {return new DistanceSphere(*this);}
+
+        /// @return -> Size of the current distance sphere.
+        virtual size_t get_sizeof(void)
+        {return sizeof(DistanceSphere);}
     };
 }
 

@@ -17,7 +17,8 @@ _OBJ = 	main.cpp.o \
 		rt/src/sphere.cpp.o \
 		rt/src/distancesphere.cpp.o \
 		rt/src/infplane.cpp.o \
-		rt/src/light.cpp.o
+		rt/src/light.cpp.o \
+		rt/src/buffer.cpp.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: % $(DEPS)
