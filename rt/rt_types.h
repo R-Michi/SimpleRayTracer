@@ -65,6 +65,14 @@ namespace rt
         size_t last = 0;                    // last primitive that is processed
         int* indices = nullptr;             // user defined indices, only works if buffer should not count indices automatically
     };
+
+    struct Framebuffer
+    {
+        size_t width    = 0;
+        size_t height   = 0;
+        Color3ui8* buff = nullptr;
+    };
+
 }
 
 #endif // __rt_types__

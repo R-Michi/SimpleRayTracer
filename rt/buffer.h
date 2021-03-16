@@ -1,5 +1,5 @@
-#ifndef __rt_buffer_h
-#define __rt_buffer_h
+#ifndef __rt_buffer_h__
+#define __rt_buffer_h__
 
 #include "rt_types.h"
 #include "rt_error.h"
@@ -127,4 +127,4 @@ namespace rt
     };
 }
 
-#endif //__rt_buffer_h
+#endif //__rt_buffer_h__
