@@ -29,5 +29,5 @@ int main()
         printf("Writing time: %" PRId64 "\n", t_out);
     }
     
-    return 0;
+    return (int)t_render;
 }

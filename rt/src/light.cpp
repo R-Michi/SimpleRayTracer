@@ -48,7 +48,7 @@ glm::vec3 rt::__rt_internal::frensel_schlick(const glm::vec3& H, const glm::vec3
 
 glm::vec3 rt::light(const Light& L, const Material& M, const glm::vec3& V, const glm::vec3 N) noexcept
 {
-    static constexpr glm::vec3 _F0(0.04f);
+    static glm::vec3 _F0(0.04f);
     static glm::vec3 F0 = glm::mix(_F0, M.albedo, M.metallic);
 
     glm::vec3 H = glm::normalize(L.direction + V);
