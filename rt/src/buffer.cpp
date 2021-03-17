@@ -1,7 +1,6 @@
 #include "../buffer.h"
 
 #include <malloc.h>
-#include <cstdio>
 
 using namespace rt;
 
@@ -24,8 +23,11 @@ Buffer& Buffer::operator= (const Buffer& buff)
 {
     this->set_layout_info(buff._layout_info);           // copy layout information
     this->clear();                                      // clear own buffer memory
-    for(size_t i = 0; i < buff._layout_info.size; i++)  // copy other instance's memory into own memory     
-        this->_buff[i] = buff._buff[i]->clone_dynamic();
+    for(size_t i = 0; i < buff._layout_info.size; i++)  // copy other instance's memory into own memory    
+    { 
+        if(buff._buff[i] != nullptr)
+            this->_buff[i] = buff._buff[i]->clone_dynamic();
+    }
     return *this;
 }
 
@@ -49,21 +51,10 @@ Buffer::~Buffer(void)
     this->clear();  // clear all stored primitives
 }
 
-BufferError Buffer::set_layout_info(const BufferLayoutInfo& layout_info)
+void Buffer::set_layout_info(const BufferLayoutInfo& layout_info)
 {
-    BufferError ret_error = BufferError::RT_BUFFER_ERROR_NONE;
-
-    // '<=' because RT_BUFFER_FIRST equals RT_BUFFER_NONE and counts also as invalid
-    if(layout_info.info <= RT_BUFFER_FIRST || layout_info.info > RT_BUFFER_LAST)
-    {
-        this->_layout_info = BufferLayoutInfo();    // If invalid, reset to default values.
-        ret_error = BufferError::RT_BUFFER_INVALID_INFO;
-    }
-    else
-        this->_layout_info = layout_info;
-
+    this->_layout_info = layout_info;
     this->allocate();   // reallocate memory
-    return ret_error;
 }
 
 BufferError Buffer::data(size_t pos, Primitive* prim)

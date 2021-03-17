@@ -16,6 +16,6 @@
 #include "buffer.h"
 
 // include ray tracing application
-    // coming soon
+#include "app.h"
 
 #endif //__rt_ray_tracing_h__

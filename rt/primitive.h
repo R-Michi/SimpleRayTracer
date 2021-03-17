@@ -57,6 +57,7 @@ namespace rt
          *  @return -> A dynamic clone of the own instance.
          *  The memory does not free automantically.
          *  To avoid memory leaks YOU have to free it yourself.
+         *  HINT: The primitive buffer deletes the memory automatically.
          */
         virtual Primitive* clone_dynamic(void) = 0;
 

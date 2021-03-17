@@ -9,7 +9,6 @@ namespace rt
     {
         RT_BUFFER_ERROR_NONE    = 0x0000,
         RT_BUFFER_OVERFLOW      = 0x0001,
-        RT_BUFFER_INVALID_INFO  = 0x0002
     };
 }
 

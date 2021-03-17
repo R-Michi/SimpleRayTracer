@@ -69,12 +69,8 @@ namespace rt
          *  data buffer itself. Be careful if you execute this method,
          *  you have to know what you are doing!
          *  @param layout_info -> Buffer-layout information.
-         *  @return -> Will return a RT_BUFFER_INVALID_INFO if the @param layout_info
-         *             is invalid (can also be due to wrong BufferLayoutInfo parameters). 
-         *             This error can be ignored if you want to set the buffer to an
-         *             invalid state.
          */
-        BufferError set_layout_info(const BufferLayoutInfo& layout_info);
+        void set_layout_info(const BufferLayoutInfo& layout_info);
 
         /**
          *  Loads one primitive into the buffer at position @param pos.
@@ -100,7 +96,7 @@ namespace rt
          *  NOTE: If the buffer-layout is invalid this function will return 'nullptr'.
          */
         inline Primitive** map_rdwr(void) noexcept
-        {return (this->_layout_info.info == RT_BUFFER_NONE || this->_buff.size() == 0) ? nullptr : this->_buff.data();}
+        {return (this->_buff.size() == 0) ? nullptr : this->_buff.data();}
 
         /**
          *  @return ->  The the internal array of primitive pointers.
@@ -108,7 +104,7 @@ namespace rt
          *  NOTE: If the buffer-layout is invalid this function will return 'nullptr'.
          */
         inline const Primitive * const * map_rdonly(void) const noexcept
-        {return (this->_layout_info.info == RT_BUFFER_NONE || this->_buff.size() == 0) ? nullptr : this->_buff.data();}
+        {return (this->_buff.size() == 0) ? nullptr : this->_buff.data();}
 
         /// @return -> Buffer-layout information.
         inline const BufferLayoutInfo& info(void) const noexcept

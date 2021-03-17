@@ -6,6 +6,7 @@
 #include "buffer.h"
 
 #include <vector>
+
 namespace rt
 {
     /**
@@ -19,46 +20,63 @@ namespace rt
     class RayTracer
     {
     private:
-        // global values
-        glm::vec2 _rt_frag_coord;       // pixel coordinates of the current pixel.
-        uint32_t _rt_primitive_id;      // id of the current processes primitive.
-        uint32_t _rt_buffer_index;      // idnex of the buffer that is drawn. (index in the command buffer)
 
-        std::vector<Buffer> cmd_buff;   // command buffer for drawing
-        float _t_max;                   // maximum length of the ray
+        glm::i32vec2 _rt_frag_coord;    // pixel coordinates of the current pixel.
+        glm::i32vec2 _rt_dimensions;    // screen dimensions
+        float _rt_ratio;                // screen aspect ratio
+        int32_t _rt_pixels;             // number of pixels the framebuffer has
+        std::vector<Buffer> _cmd_buff;  // command buffer for drawing
+        Framebuffer _fbo;               // framebuffer where the pixels get stored
+        uint32_t _n_threads;            // number of threads used for rendering
 
         /**
-         *  Effectively runs the ray-tracing application.
-         *  Processes the color for every pixel and stores the resulting color into
-         *  the framebuffer.
-         *  Additionally it provides the NDC coordinates for the ray generation shader.
+         *  Tests if a ray intersects with a primitive in the scene..
+         *  @param ray -> The ray that is tested if it intersects with a primitive.
+         *  @param t_max -> The maximum length of the ray. Similar to the render distance.
+         *  @param flags -> Can change the way how intersection is calculated.
+         *  @return @param hit_prim -> The primitive that the ray intersected with.
+         *  @return -> The length of the ray-origin to the closest intersection point.
          */
-        void run(void);
-
+        float intersection(const rt::Ray& ray, float t_max, int flags, const rt::Primitive** hit_prim);
 
     protected:
-        /// @return -> The pixel coordinates of the current pixel.
-        inline const glm::vec2& rt_frag_coord(void) noexcept
+        // global read only values
+        /// Fragment coordinate @return the pixel coordinate of the current processed pixel.
+        inline const glm::i32vec2& rt_frag_coord(void) noexcept
         {return this->_rt_frag_coord;}
 
-        /// @return -> The id if the current processed primitive.
-        inline uint32_t rt_primitive_id(void) noexcept
-        {return this->_rt_primitive_id;} 
+        /// @return The pixel-dimensions of the framebuffer.
+        inline const glm::i32vec2& rt_dimensions(void) noexcept
+        {return this->_rt_dimensions;}
 
-        inline uint32_t rt_buffer_index(void) noexcept
-        {return this->_rt_buffer_index;}
+        /// @return The screen aspect ratio.
+        inline float rt_ratio(void) noexcept
+        {return this->_rt_ratio;}
+
+        /// @return The numbers of pixels to process.
+        inline int32_t rt_pixels(void) noexcept
+        {return this->_rt_pixels;}
+
+        /// @return The while scene-geometry. Can be multiple primitive-buffers.
+        inline const Buffer* rt_geometry(void) noexcept
+        {return this->_cmd_buff.data();}
+
+        /// @return The number of primitive buffers.
+        inline size_t rt_geometry_num_buffers(void) noexcept
+        {return this->_cmd_buff.size();}
 
         /**
          *  Begins the ray-tracing process.
          *  @param ray -> Ray to be traced.
          *  @param recursions -> The number of recursions to be called.
+         *  @param t_max -> Maximum length the ray is allowed to have.
          *  @return -> The light intensity (color) of the intersecion.
          */
-        glm::vec3 trace_ray(const Ray& ray, int recursions);
+        glm::vec3 trace_ray(const Ray& ray, int recursions, float t_max);
 
         /**
-         *  This shader gets called for every pixel and is used to generate
-         *  the main ray from the camera into the scene.
+         *  This shader gets called for every pixel and is used calculate
+         *  the final color of the current pixel.
          *  @param x -> X coordinate of the normalized screen space.
          *  @param y -> Y coordinate of the normalized screen space.
          *  @return -> Color of the current pixel.
@@ -86,27 +104,36 @@ namespace rt
         virtual glm::vec3 miss_shader(const Ray& ray, int recursuon, float t_max) = 0;
         
     public:
-        RayTracer(void);
-        virtual ~RayTracer(void);
+        RayTracer(void) noexcept;
+        
+        RayTracer(const RayTracer&) = delete;
+        RayTracer& operator= (const RayTracer&) = delete;
+
+        RayTracer(RayTracer&&) = delete;
+        RayTracer& operator= (RayTracer&&) = delete;
+
+        virtual ~RayTracer(void) noexcept;
+
+        /**
+         *  Effectively runs the ray-tracing application.
+         *  Processes the color for every pixel and stores the resulting color into
+         *  the framebuffer.
+         *  Additionally it provides the NDC coordinates for the ray generation shader.
+         */
+        void run(void);
 
         /**
          *  Attaches the framebuffer object to the ray tracer.
          *  The image data will be written into the framebuffer object.
          *  @param fbo -> The framebuffer to attach.
          */
-        void set_framebuffer(const Framebuffer& fbo);
+        void set_framebuffer(const Framebuffer& fbo) noexcept;
 
         /**
          *  @return -> The attached framebuffer object of the ray tracer.
          *             Pixels can be fetched.
          */
         const Framebuffer& get_framebuffer(void) const noexcept;
-
-        /**
-         *  Sets the maximum length of the ray.
-         *  @param _t_max -> Maximum ray length.
-         */
-        void set_ray_maximum_length(float _t_max) noexcept;
 
         /**
          *  Cleares the image with a RGB color.
@@ -118,10 +145,20 @@ namespace rt
         void clear_color(float r, float g, float b);
 
         /**
-         *  Adds a command to the command buffer.
+         *  Adds a draw buffer to the comand buffer.
          *  @param buff -> Buffer to draw.
          */
         void draw_buffer(const Buffer& buff);
+
+        /**
+         *  Sets the number of threads the ray tracer uses for rendering.
+         *  @param n_threads -> Number of threads.
+         */
+        void set_num_threads(uint32_t n_threads) noexcept;
+        
+        /// @return The number of threads used for rendering.
+        inline uint32_t get_num_threads(void) const noexcept
+        {return this->_n_threads;}
     };
 }
 
