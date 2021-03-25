@@ -4,7 +4,7 @@
 This program is able to render static images with ray tracing.
 NOTE: There is only a CPU side implementation of the ray tracing algorithm.
 The program is NOT suited to run real-time rendering applications.
-The internal ray tracing sources can also be exproted as an external library.
+The internal ray tracing sources can also be exproted as an external static library.
 
 # project
 This project can be built with CMAKE. It is also compatible with visual studio.
