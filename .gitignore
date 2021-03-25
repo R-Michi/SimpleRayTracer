@@ -1,6 +1,3 @@
-rt_output.png
-lib/glm
-lib/stb_master
-.vscode
-obj/*
-ray_tracing.exe
+lib
+out/build/*
+!out/build/NULL.txt
