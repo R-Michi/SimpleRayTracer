@@ -73,7 +73,7 @@ RT_Application::~RT_Application(void)
 float RT_Application::sdf(const glm::vec3& p, float t_max, const rt::Primitive** hit_prim)
 {
     float d = t_max;                                        // Use maximum length of the ray if there is no object within that range.
-    const size_t n_buff = this->rt_geometry_num_buffers();
+    const size_t n_buff = this->rt_geometry_buffer_count();
 
     for(size_t b = 0; b < n_buff; b++)
     {
@@ -122,7 +122,7 @@ float RT_Application::shadow(const rt::Ray& shadow_ray, float t_max, float softn
     return res;
 }
 
-glm::vec3 RT_Application::main_shader(float x, float y)
+glm::vec3 RT_Application::ray_generation_shader(float x, float y)
 {
     x *= this->rt_ratio();
 

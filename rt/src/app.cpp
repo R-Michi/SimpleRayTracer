@@ -29,7 +29,7 @@ RayTracer::~RayTracer(void) noexcept
 float RayTracer::intersection(const rt::Ray& ray, float t_max, int flags, const rt::Primitive** hit_prim)
 {
     float t = t_max;
-    const size_t bs = this->rt_geometry_num_buffers();
+    const size_t bs = this->rt_geometry_buffer_count();
 
     // for each buffer...
     for(size_t b = 0; b < bs; b++)
@@ -88,7 +88,7 @@ void RayTracer::run(void)
             {
                 const float ndc_x = gl::convert::from_pixels_pos_x(x, this->_fbo.width);
                 const float ndc_y = gl::convert::from_pixels_pos_y(y, this->_fbo.height);
-                this->_fbo.buff[atXY(x, y, this->_fbo.width)] = main_shader(ndc_x, ndc_y);
+                this->_fbo.buff[atXY(x, y, this->_fbo.width)] = ray_generation_shader(ndc_x, ndc_y);
             }
         }
     }

@@ -62,7 +62,7 @@ namespace rt
         {return this->_cmd_buff.data();}
 
         /// @return The number of primitive buffers.
-        inline size_t rt_geometry_num_buffers(void) noexcept
+        inline size_t rt_geometry_buffer_count(void) noexcept
         {return this->_cmd_buff.size();}
 
         /**
@@ -76,12 +76,13 @@ namespace rt
 
         /**
          *  This shader gets called for every pixel and is used calculate
-         *  the final color of the current pixel.
+         *  the final color of the current pixel. It is also used to invoke 
+         *  the ray tracing process, why it is called ray generation shader.
          *  @param x -> X coordinate of the normalized screen space.
          *  @param y -> Y coordinate of the normalized screen space.
          *  @return -> Color of the current pixel.
          */
-        virtual glm::vec3 main_shader(float x, float y) = 0;
+        virtual glm::vec3 ray_generation_shader(float x, float y) = 0;
 
         /**
          *  This shader gets called if there is an intersection with a sphere.
