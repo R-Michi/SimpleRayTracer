@@ -48,11 +48,51 @@ namespace rt
         float apha;
     };
 
-    struct BufferLayoutInfo
+    struct BufferLayout
     {
         size_t size = 0;                    // the number of primitives the buffer can store
         size_t first = 0;                   // first primitive that is processed
         size_t last = 0;                    // last primitive that is processed
+    };
+
+    struct ImageLayout
+    {
+        uint32_t width;
+        uint32_t height;
+        uint32_t channels;
+    };
+
+    struct Image
+    {
+        ImageLayout layout;
+        uint8_t*    data;
+    };
+
+    enum Filter
+    {
+        RT_FILTER_NEAREST = 0x0,
+        RT_FILTER_LINEAR = 0x1
+    };
+
+    enum CubemapFace
+    {
+        RT_CUBEMAP_FACE_FRONT = 0x0,
+        RT_CUBEMAP_FACE_BACK = 0x1,
+        RT_CUBEMAP_FACE_TOP = 0x2,
+        RT_CUBEMAP_FACE_BOTTOM = 0x3,
+        RT_CUBEMAP_FACE_LEFT = 0x4,
+        RT_CUBEMAP_FACE_RIGHT = 0x5,
+    };
+
+    struct CubemapCreateInfo
+    {
+        const char* front;
+        const char* back;
+        const char* top;
+        const char* bottom;
+        const char* left;
+        const char* right;
+        Filter      filter;
     };
 
     struct Framebuffer

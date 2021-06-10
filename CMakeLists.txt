@@ -23,6 +23,7 @@ add_library(ray_tracing_static STATIC
 			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/infplane.cpp"
 			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/light.cpp"
 			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/buffer.cpp"
+			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/cubemap.cpp"
 			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/app.cpp") 
 
 # compile and link final executable

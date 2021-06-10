@@ -6,12 +6,12 @@ using namespace rt;
 
 Buffer::Buffer(void)
 {
-    this->_layout_info  = BufferLayoutInfo();
+    this->_layout_info  = BufferLayout();
 }
 
-Buffer::Buffer(const BufferLayoutInfo& layout_info) : Buffer()
+Buffer::Buffer(const BufferLayout& layout_info) : Buffer()
 {
-    this->set_layout_info(layout_info);
+    this->set_layout(layout_info);
 }
 
 Buffer::Buffer(const Buffer& buff)
@@ -21,7 +21,7 @@ Buffer::Buffer(const Buffer& buff)
 
 Buffer& Buffer::operator= (const Buffer& buff)
 {
-    this->set_layout_info(buff._layout_info);           // copy layout information
+    this->set_layout(buff._layout_info);           // copy layout information
     this->clear();                                      // clear own buffer memory
     for(size_t i = 0; i < buff._layout_info.size; i++)  // copy other instance's memory into own memory    
     { 
@@ -38,11 +38,11 @@ Buffer::Buffer(Buffer&& buff)
 
 Buffer& Buffer::operator= (Buffer&& buff)
 {
-    this->set_layout_info(buff._layout_info);           // copy layout information
+    this->set_layout(buff._layout_info);           // copy layout information
     this->clear();                                      // clear own memory
     for(size_t i = 0; i < buff._layout_info.size; i++)  // copy other instance's memory into own memory   
         this->_buff[i] = buff._buff[i]->clone_dynamic();
-    buff.set_layout_info(BufferLayoutInfo());           // set other instance's layout information to default values, other instance's memory gets cleared automatically
+    buff.set_layout(BufferLayout());           // set other instance's layout information to default values, other instance's memory gets cleared automatically
     return *this;
 }
 
@@ -51,7 +51,7 @@ Buffer::~Buffer(void)
     this->clear();  // clear all stored primitives
 }
 
-void Buffer::set_layout_info(const BufferLayoutInfo& layout_info)
+void Buffer::set_layout(const BufferLayout& layout_info)
 {
     this->_layout_info = layout_info;
     this->allocate();   // reallocate memory

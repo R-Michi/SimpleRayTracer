@@ -1,3 +1,4 @@
 lib
-out/build/*
-!out/build/NULL.txt
+out
+.vs
+CMakeSettings.json

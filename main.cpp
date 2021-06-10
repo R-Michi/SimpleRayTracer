@@ -1,10 +1,13 @@
+// implementation defines
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+
 // include std libraries
 #include <chrono>   // for time measurement
 #include <cstdio>   // for printf
 #include <cinttypes>
 
 // incldue stbmaster
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
 // include ray tracing

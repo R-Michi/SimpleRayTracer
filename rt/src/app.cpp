@@ -36,8 +36,8 @@ float RayTracer::intersection(const rt::Ray& ray, float t_max, int flags, const 
     {
         // and for each primitive...
         const Primitive * const * map = this->rt_geometry()[b].map_rdonly();
-        const size_t first = this->rt_geometry()[b].info().first;
-        const size_t last = this->rt_geometry()[b].info().last;
+        const size_t first = this->rt_geometry()[b].layout().first;
+        const size_t last = this->rt_geometry()[b].layout().last;
 
         for(size_t p = first; p < last; p++)
         {

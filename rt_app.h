@@ -9,6 +9,7 @@ class RT_Application : protected rt::RayTracer
 {
 private:
     rt::Light light;
+    rt::Cubemap environment;
 
     /**
      *  Calculates the distance to the closest sphere (primitive / object) from a given point P.
@@ -25,7 +26,7 @@ private:
      *  Combutes how much an object is in shadow.
      *  @param prim -> Primitives to be checked for intersection.
      *  @param n_spheres -> The number of the spheres.
-     *  @param shadow_ray -> The ray that is traced from a point in the space to the light source.
+     *  @param shadow_ray -> The ray that is traced from a point in the space to  the light source.
      *  @param t_max -> The maximum length of the ray.
      *  @param softness -> Defines how soft is the shadow (size of the penumbra), whereby 0 is infinite soft.
      *  @return -> A value between 0 and 1 that determines how much the point is in shadow.

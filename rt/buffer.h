@@ -18,7 +18,7 @@ namespace rt
     class Buffer
     {
     private:
-        BufferLayoutInfo _layout_info;
+        BufferLayout _layout_info;
         std::vector<Primitive*> _buff;
 
         // allocates or reallocates buffer memory
@@ -41,7 +41,7 @@ namespace rt
          *  the buffer to be invalid.
          *  @param layout_info -> Buffer-layout information.
          */
-        explicit Buffer(const BufferLayoutInfo& layout_info);
+        explicit Buffer(const BufferLayout& layout_info);
 
         /**
          *  Copies an object into the own instance.
@@ -70,7 +70,7 @@ namespace rt
          *  you have to know what you are doing!
          *  @param layout_info -> Buffer-layout information.
          */
-        void set_layout_info(const BufferLayoutInfo& layout_info);
+        void set_layout(const BufferLayout& layout_info);
 
         /**
          *  Loads one primitive into the buffer at position @param pos.
@@ -107,7 +107,7 @@ namespace rt
         {return (this->_buff.size() == 0) ? nullptr : this->_buff.data();}
 
         /// @return -> Buffer-layout information.
-        inline const BufferLayoutInfo& info(void) const noexcept
+        inline const BufferLayout& layout(void) const noexcept
         {return this->_layout_info;}
 
         // Cleares all internal memory.

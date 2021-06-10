@@ -1,6 +1,7 @@
 #include "rt_app.h"
 
 #include <omp.h>
+#include <stdexcept>
 
 RT_Application::RT_Application(void)
 {
@@ -47,16 +48,28 @@ RT_Application::RT_Application(void)
         )
     };
 
+    rt::CubemapCreateInfo cubemap_ci = {};
+    cubemap_ci.front    = "../../../assets/skyboxes/skybox1_front.png";
+    cubemap_ci.back     = "../../../assets/skyboxes/skybox1_back.png";
+    cubemap_ci.top      = "../../../assets/skyboxes/skybox1_top.png";
+    cubemap_ci.bottom   = "../../../assets/skyboxes/skybox1_bottom.png";
+    cubemap_ci.left     = "../../../assets/skyboxes/skybox1_left.png";
+    cubemap_ci.right    = "../../../assets/skyboxes/skybox1_right.png";
+    cubemap_ci.filter   = rt::RT_FILTER_LINEAR;
+
+    if (this->environment.load(cubemap_ci) == rt::RT_TEXTURE_ERROR_LOAD)
+        throw std::runtime_error("Failed to load skybox.");
+
     rt::Framebuffer fbo;
     fbo.width = SCR_WIDTH;
     fbo.height = SCR_HEIGHT;
 
-    rt::BufferLayoutInfo info;
-    info.size = PRIM_COUNT;
-    info.first = 0;
-    info.last = info.size;
+    rt::BufferLayout buffer_layout;
+    buffer_layout.size = PRIM_COUNT;
+    buffer_layout.first = 0;
+    buffer_layout.last = buffer_layout.size;
 
-    rt::Buffer buff(info);
+    rt::Buffer buff(buffer_layout);
     buff.data(0, 3, spheres);
 
     this->set_num_threads(omp_get_max_threads() * 2);
@@ -78,7 +91,7 @@ float RT_Application::sdf(const glm::vec3& p, float t_max, const rt::Primitive**
     for(size_t b = 0; b < n_buff; b++)
     {
         const rt::Primitive * const * map = this->rt_geometry()[b].map_rdonly();
-        const size_t size = this->rt_geometry()[b].info().size;
+        const size_t size = this->rt_geometry()[b].layout().size;
 
         for(size_t i = 0; i < size; i++)                    // Iterate through the primitives and find the closest one.
         {
@@ -197,7 +210,11 @@ glm::vec3 RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, 
 
 glm::vec3 RT_Application::miss_shader(const rt::Ray& ray, int recursuon, float t_max)
 {
-    return {0.0f, 0.0f, 0.0f};
+    glm::vec3 color = glm::vec3(this->environment.sample(ray.direction));
+    constexpr float HDRmax = 2.0f;
+    const float x = HDRmax / (HDRmax + 1);
+    color = (color * x) / (glm::vec3(1.0f) - color * x);
+    return color;
 }
 
 void RT_Application::app_run(void)
