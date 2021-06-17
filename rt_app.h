@@ -35,8 +35,8 @@ private:
 
 protected:
     glm::vec3 ray_generation_shader(float x, float y);
-    glm::vec3 closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t_max, const rt::Primitive* hit);
-    glm::vec3 miss_shader(const rt::Ray& ray, int recursuon, float t_max);
+    void closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload);
+    void miss_shader(const rt::Ray& ray, int recursuon, float t_max, void* ray_payload);
 
 public:
     // constants

@@ -21,7 +21,6 @@ namespace rt
     {
     private:
 
-        glm::i32vec2 _rt_frag_coord;    // pixel coordinates of the current pixel.
         glm::i32vec2 _rt_dimensions;    // screen dimensions
         float _rt_ratio;                // screen aspect ratio
         int32_t _rt_pixels;             // number of pixels the framebuffer has
@@ -40,11 +39,6 @@ namespace rt
         float intersection(const rt::Ray& ray, float t_max, int flags, const rt::Primitive** hit_prim);
 
     protected:
-        // global read only values
-        /// Fragment coordinate @return the pixel coordinate of the current processed pixel.
-        inline const glm::i32vec2& rt_frag_coord(void) noexcept
-        {return this->_rt_frag_coord;}
-
         /// @return The pixel-dimensions of the framebuffer.
         inline const glm::i32vec2& rt_dimensions(void) noexcept
         {return this->_rt_dimensions;}
@@ -57,7 +51,7 @@ namespace rt
         inline int32_t rt_pixels(void) noexcept
         {return this->_rt_pixels;}
 
-        /// @return The while scene-geometry. Can be multiple primitive-buffers.
+        /// @return The whole scene-geometry. Can be multiple primitive-buffers.
         inline const Buffer* rt_geometry(void) noexcept
         {return this->_cmd_buff.data();}
 
@@ -70,9 +64,9 @@ namespace rt
          *  @param ray -> Ray to be traced.
          *  @param recursions -> The number of recursions to be called.
          *  @param t_max -> Maximum length the ray is allowed to have.
-         *  @return -> The light intensity (color) of the intersecion.
+         *  @param[out] ray_payload -> Ray tracing payload.
          */
-        glm::vec3 trace_ray(const Ray& ray, int recursions, float t_max);
+        void trace_ray(const Ray& ray, int recursions, float t_max, void* ray_payload);
 
         /**
          *  This shader gets called for every pixel and is used calculate
@@ -91,18 +85,18 @@ namespace rt
          *  @param t -> The length of the vector from origin to the intersection.
          *  @param t_max -> The maximum length of any ray.
          *  @param hit_prim -> The primitive that the ray intersected with.
-         *  @return -> A color-value of the current intersection point.
+         *  @param[out] ray_payload -> Ray tracing payload.
          */
-        virtual glm::vec3 closest_hit_shader(const Ray& ray, int recursion, float t, float t_max, const Primitive* hit) = 0;
+        virtual void closest_hit_shader(const Ray& ray, int recursion, float t, float t_max, const Primitive* hit, void* ray_payload) = 0;
 
         /**
          *  This shader gets called if there is no intersection with any object in the scene.
          *  @param ray -> The ray that was traced into the void.
          *  @param recursion -> The actual recursion of the ray-tracing process.
          *  @param t_max -> The maximum length of any ray.
-         *  @return -> A color-value if the ray misses.
+         *  @param[out] ray_payload -> Ray tracing payload.
          */
-        virtual glm::vec3 miss_shader(const Ray& ray, int recursuon, float t_max) = 0;
+        virtual void miss_shader(const Ray& ray, int recursuon, float t_max, void* ray_payload) = 0;
         
     public:
         RayTracer(void) noexcept;

@@ -19,7 +19,7 @@ RT_Application::RT_Application(void)
             1.0f,
             {
                 {0.0f, 0.0f, 1.0f},
-                0.8f,
+                0.3f,
                 0.5f,
                 1.0f
             }
@@ -30,7 +30,7 @@ RT_Application::RT_Application(void)
             1.0f,
             {
                 {0.0f, 1.0f, 0.0f},
-                0.8f,
+                0.3f,
                 0.5f,
                 1.0f
             }
@@ -49,12 +49,12 @@ RT_Application::RT_Application(void)
     };
 
     rt::CubemapCreateInfo cubemap_ci = {};
-    cubemap_ci.front    = "../../../assets/skyboxes/skybox1_front.png";
-    cubemap_ci.back     = "../../../assets/skyboxes/skybox1_back.png";
-    cubemap_ci.top      = "../../../assets/skyboxes/skybox1_top.png";
-    cubemap_ci.bottom   = "../../../assets/skyboxes/skybox1_bottom.png";
-    cubemap_ci.left     = "../../../assets/skyboxes/skybox1_left.png";
-    cubemap_ci.right    = "../../../assets/skyboxes/skybox1_right.png";
+    cubemap_ci.front    = "../../../assets/skyboxes/front.jpg";
+    cubemap_ci.back     = "../../../assets/skyboxes/back.jpg";
+    cubemap_ci.top      = "../../../assets/skyboxes/top.jpg";
+    cubemap_ci.bottom   = "../../../assets/skyboxes/bottom.jpg";
+    cubemap_ci.left     = "../../../assets/skyboxes/left.jpg";
+    cubemap_ci.right    = "../../../assets/skyboxes/right.jpg";
     cubemap_ci.filter   = rt::RT_FILTER_LINEAR;
 
     if (this->environment.load(cubemap_ci) == rt::RT_TEXTURE_ERROR_LOAD)
@@ -152,19 +152,20 @@ glm::vec3 RT_Application::ray_generation_shader(float x, float y)
     ray.direction = glm::normalize(x * cam_x + y * cam_y + 1.5f * cam_z);                   // rotated intersection with the image plane
 
     // render the image in hdr
-    glm::vec3 hdr_color = trace_ray(ray, 5, 100.0f);                                        // begin ray-tracing process                              
+    glm::vec3 hdr_color;
+    trace_ray(ray, 5, 100.0f, &hdr_color);                                                  // begin ray-tracing process                              
     glm::vec3 ldr_color = hdr_color / (hdr_color + glm::vec3(1.0f));                        // convert to ldr
 
     return ldr_color;
 }
 
-glm::vec3 RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t_max, const rt::Primitive* hit)
+void RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload)
 {
     glm::vec3 out_color;                                                                    // output/result color
 
     const rt::Sphere* hit_sphere = dynamic_cast<const rt::Sphere*>(hit);
-    if(hit_sphere == nullptr)
-        return {0.0f, 0.0f, 0.0f};
+    if (hit_sphere == nullptr)
+        *((glm::vec3*)ray_payload) = glm::vec3(0.0f);
 
     glm::vec3 I = ray.origin + (t + 0.0001f) * ray.direction;                               // intersection point
     glm::vec3 N = glm::normalize(I - hit_sphere->center());                                 // surface's normal vector at the intersection point
@@ -182,7 +183,8 @@ glm::vec3 RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, 
 
     // combute reflection
     rt::Ray reflect_ray     = {I, glm::normalize(glm::reflect(ray.direction, N))};      // let the incoming light ray reflect around the surface's normal vector
-    glm::vec3 reflect_light = trace_ray(reflect_ray, recursion-1, t_max);               // trace the reflected ray
+    glm::vec3 reflect_light; 
+    trace_ray(reflect_ray, recursion - 1, t_max, &reflect_light);                       // trace the reflected ray
 
     // combute refraction
     static constexpr float n_air        = 1.0f;                                         // refraction index of air
@@ -198,23 +200,24 @@ glm::vec3 RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, 
 
     refract_ray.direction   = glm::refract(refract_ray.direction, n_back, n_ratio_inv); // let the light ray refract a second time at the outrance of the sphere
     refract_ray.origin      = i_back;
-    glm::vec3 refract_light = trace_ray(refract_ray, recursion-1, t_max);               // trace the refracted ray
+    glm::vec3 refract_light;
+    trace_ray(refract_ray, recursion - 1, t_max, &refract_light);                       // trace the refracted ray
 
     // calculate final color result -> A + R + T = 100%
     const float absorb  = hit_sphere->material().roughness;
     const float reflect = 1.0f - hit_sphere->material().roughness;
 
     out_color = hit_sphere->material().apha * (absorb * absorb_light + reflect * reflect_light) + (1.0f - hit_sphere->material().apha) * refract_light;
-    return out_color;
+    *((glm::vec3*)ray_payload) = out_color;
 }
 
-glm::vec3 RT_Application::miss_shader(const rt::Ray& ray, int recursuon, float t_max)
+void RT_Application::miss_shader(const rt::Ray& ray, int recursuon, float t_max, void* ray_payload)
 {
     glm::vec3 color = glm::vec3(this->environment.sample(ray.direction));
     constexpr float HDRmax = 2.0f;
     const float x = HDRmax / (HDRmax + 1);
     color = (color * x) / (glm::vec3(1.0f) - color * x);
-    return color;
+    *((glm::vec3*)ray_payload) = color;
 }
 
 void RT_Application::app_run(void)

@@ -8,7 +8,6 @@ using namespace rt;
 
 RayTracer::RayTracer(void) noexcept
 {
-    this->_rt_frag_coord = {0, 0};
     this->_rt_dimensions = {0, 0};
     this->_rt_ratio = 0.0f;
     this->_rt_pixels = 0;
@@ -59,21 +58,17 @@ float RayTracer::intersection(const rt::Ray& ray, float t_max, int flags, const 
     return t;
 }
 
-glm::vec3 RayTracer::trace_ray(const Ray& ray, int recursions, float t_max)
+void RayTracer::trace_ray(const Ray& ray, int recursions, float t_max, void* ray_payload)
 {
-    glm::vec3 out_color = {0.0f, 0.0f, 0.0f};
-    if(recursions == 0)
-        return out_color;
+    if (recursions == 0) return;
 
     const Primitive* hit_prim = nullptr;
     float t = this->intersection(ray, t_max, 0, &hit_prim);
 
     if(t < t_max)
-        out_color = this->closest_hit_shader(ray, recursions, t, t_max, hit_prim);
+        this->closest_hit_shader(ray, recursions, t, t_max, hit_prim, ray_payload);
     else
-        out_color = this->miss_shader(ray, recursions, t_max);
-
-    return out_color;
+        this->miss_shader(ray, recursions, t_max, ray_payload);
 }
 
 void RayTracer::run(void)
