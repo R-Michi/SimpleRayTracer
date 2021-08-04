@@ -1,4 +1,16 @@
+/**
+* @file     rt_app.cpp
+* @brief    Source file for the ray-tracing test application.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
 #include "rt_app.h"
+#include "glc-1.0.0/GL/glc.h"
 
 #include <omp.h>
 #include <stdexcept>
@@ -10,44 +22,33 @@ RT_Application::RT_Application(void)
         {-1.0f, 0.5f, 0.0f},
         {7.0f, 7.0f, 7.0f}
     };
+    this->mtl1 = Material(glm::vec3(0.0f, 0.0f, 1.0f), 0.5f, 0.8f, 1.0f);
+    this->mtl2 = Material(glm::vec3(0.0f, 1.0f, 0.0f), 0.5f, 0.8f, 1.0f);
+    this->mtl3 = Material(glm::vec3(1.0f, 1.0f, 1.0f), 0.5f, 0.8f, 1.0f);
 
-    rt::Sphere spheres[PRIM_COUNT] = 
+    rt::Sphere spheres[PRIM_COUNT] =
     {
         rt::Sphere
         (
             {0.0f, 0.0f, 3.0f},
             1.0f,
-            {
-                {0.0f, 0.0f, 1.0f},
-                0.3f,
-                0.5f,
-                1.0f
-            }
+            &mtl1
         ),
         rt::Sphere
         (
             {3.0f, 0.0f, 3.0f},
             1.0f,
-            {
-                {0.0f, 1.0f, 0.0f},
-                0.3f,
-                0.5f,
-                1.0f
-            }
+            &mtl2
         ),
         rt::Sphere
         (
             {-1.75f, -1001.0f, 3.0f},
             1000.0f,
-            {
-                {1.0f, 1.0f, 1.0f},
-                0.7f,
-                0.0f,
-                1.0f
-            }
+            &mtl3
         )
     };
 
+#if 0
     rt::CubemapCreateInfo cubemap_ci = {};
     cubemap_ci.front    = "../../../assets/skyboxes/front.jpg";
     cubemap_ci.back     = "../../../assets/skyboxes/back.jpg";
@@ -59,10 +60,52 @@ RT_Application::RT_Application(void)
 
     if (this->environment.load(cubemap_ci) == rt::RT_TEXTURE_ERROR_LOAD)
         throw std::runtime_error("Failed to load skybox.");
+#endif
 
-    rt::Framebuffer fbo;
-    fbo.width = SCR_WIDTH;
-    fbo.height = SCR_HEIGHT;
+    // load texture
+    int w, h;
+    uint8_t* data = stbi_load("../../../assets/textures/cobblestone.png", &w, &h, nullptr, 3);
+
+    rt::ImageCreateInfo image_ci = {};
+    image_ci.width = w;
+    image_ci.height = h;
+    image_ci.depth = 1;
+    image_ci.channels = 3;
+
+    this->tex.set_address_mode(rt::RT_TEXTURE_ADDRESS_MODE_REPEAT, rt::RT_TEXTURE_ADDRESS_MODE_REPEAT, rt::RT_TEXTURE_ADDRESS_MODE_CLAMP_TO_BORDER);
+    this->tex.set_filter(rt::RT_FILTER_NEAREST);
+    this->tex.set_border_color(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    rt::ImageError error = this->tex.load(image_ci, data);
+    if(error != rt::RT_IMAGE_ERROR_NONE)
+        throw std::runtime_error("Failed to load texture.");
+    std::cout << "texture loaded" << std::endl;
+    stbi_image_free(data);
+
+    // load spherical map
+    this->spherical_env.set_address_mode(rt::RT_TEXTURE_ADDRESS_MODE_CLAMP_TO_BORDER, rt::RT_TEXTURE_ADDRESS_MODE_CLAMP_TO_BORDER, rt::RT_TEXTURE_ADDRESS_MODE_CLAMP_TO_BORDER);
+    this->spherical_env.set_filter(rt::RT_FILTER_LINEAR);
+    error = rt::TextureLoader::loadf(this->spherical_env, "../../../assets/skyboxes/environment.hdr", 3);
+    if (error != rt::RT_IMAGE_ERROR_NONE)
+        throw std::runtime_error("Failed to load spherical map.");
+    std::cout << "spherical map loaded" << std::endl;
+
+    // load cubemap
+    rt::CubemapCreateInfo cci = {};
+    cci.right = "../../../assets/skyboxes/right.jpg";
+    cci.left = "../../../assets/skyboxes/left.jpg";
+    cci.top = "../../../assets/skyboxes/top.jpg";
+    cci.bottom = "../../../assets/skyboxes/bottom.jpg";
+    cci.front  = "../../../assets/skyboxes/front.jpg";
+    cci.back = "../../../assets/skyboxes/back.jpg";
+
+    error = rt::TextureLoader::load_cube(this->cubemap, cci, 3);
+    if (error != rt::RT_IMAGE_ERROR_NONE)
+        throw std::runtime_error("Failed to load cubemap.");
+    std::cout << "cubemap loaded" << std::endl;
+
+    rt::ImageCreateInfo fbo_ci = {};
+    fbo_ci.width = SCR_WIDTH;
+    fbo_ci.height = SCR_HEIGHT;
 
     rt::BufferLayout buffer_layout;
     buffer_layout.size = PRIM_COUNT;
@@ -73,7 +116,7 @@ RT_Application::RT_Application(void)
     buff.data(0, 3, spheres);
 
     this->set_num_threads(omp_get_max_threads() * 2);
-    this->set_framebuffer(fbo);
+    this->set_framebuffer(fbo_ci);
     this->clear_color(0.0f, 0.0f, 0.0f);
     this->draw_buffer(buff);
 }
@@ -110,7 +153,7 @@ float RT_Application::sdf(const glm::vec3& p, float t_max, const rt::Primitive**
     return d;
 }
 
-float RT_Application::shadow(const rt::Ray& shadow_ray, float t_max, float softness)
+float RT_Application::shadow(const rt::ray_t& shadow_ray, float t_max, float softness)
 {
     static constexpr int MAX_ITERATIONS = 128;                              // Maximum iterations of the ray marging process.
 
@@ -135,9 +178,10 @@ float RT_Application::shadow(const rt::Ray& shadow_ray, float t_max, float softn
     return res;
 }
 
-glm::vec3 RT_Application::ray_generation_shader(float x, float y)
+glm::vec3 RT_Application::ray_generation_shader(uint32_t x, uint32_t y)
 {
-    x *= this->rt_ratio();
+    float ndc_x = gl::convert::from_pixels_pos_x(x, this->rt_dimensions().x) * this->rt_ratio();
+    float ndc_y = gl::convert::from_pixels_pos_y(y, this->rt_dimensions().y);
 
     glm::vec3 origin    = {0.0f, 0.0f, -5.0f};                                              // origin of the camera
     glm::vec3 look_at   = {2.0f, 0.0f, 0.0f};                                               // direction/point the camere is looking at
@@ -147,9 +191,9 @@ glm::vec3 RT_Application::ray_generation_shader(float x, float y)
     glm::vec3 cam_y     = glm::cross(cam_z, cam_x);                                         // y-direction of the camera
 
     // generate ray
-    rt::Ray ray;
+    rt::ray_t ray;
     ray.origin = origin;
-    ray.direction = glm::normalize(x * cam_x + y * cam_y + 1.5f * cam_z);                   // rotated intersection with the image plane
+    ray.direction = glm::normalize(ndc_x * cam_x + ndc_y * cam_y + 1.5f * cam_z);                   // rotated intersection with the image plane
 
     // render the image in hdr
     glm::vec3 hdr_color;
@@ -159,30 +203,33 @@ glm::vec3 RT_Application::ray_generation_shader(float x, float y)
     return ldr_color;
 }
 
-void RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload)
+void RT_Application::closest_hit_shader(const rt::ray_t& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload)
 {
     glm::vec3 out_color;                                                                    // output/result color
 
     const rt::Sphere* hit_sphere = dynamic_cast<const rt::Sphere*>(hit);
     if (hit_sphere == nullptr)
         *((glm::vec3*)ray_payload) = glm::vec3(0.0f);
+    const Material* mtl = reinterpret_cast<const Material*>(hit_sphere->attribute());
+    if(mtl == nullptr)
+        *((glm::vec3*)ray_payload) = glm::vec3(0.0f);
 
     glm::vec3 I = ray.origin + (t + 0.0001f) * ray.direction;                               // intersection point
     glm::vec3 N = glm::normalize(I - hit_sphere->center());                                 // surface's normal vector at the intersection point
 
     // combute absorption
-    glm::vec3 light_intensity = rt::light(this->light, hit_sphere->material(), -ray.direction, N);   // combute surface's light intensity
+    glm::vec3 light_intensity = glm::vec3(1.0f);   // combute surface's light intensity
 
     // combute shadow
-    rt::Ray shadow_ray = {I, this->light.direction};
+    rt::ray_t shadow_ray = {I, this->light.direction};
     float shadow_value = 0.0f;
     if(glm::dot(this->light.direction, N) > 0.0f)
         shadow_value = this->shadow(shadow_ray, t_max, 10.0f);
 
-    glm::vec3 absorb_light = hit_sphere->material().albedo * 0.3f + light_intensity * shadow_value; // final aborbed light intensity
+    glm::vec3 absorb_light = mtl->albedo() * 0.3f + light_intensity * shadow_value; // final aborbed light intensity
 
     // combute reflection
-    rt::Ray reflect_ray     = {I, glm::normalize(glm::reflect(ray.direction, N))};      // let the incoming light ray reflect around the surface's normal vector
+    rt::ray_t reflect_ray     = {I, glm::normalize(glm::reflect(ray.direction, N))};      // let the incoming light ray reflect around the surface's normal vector
     glm::vec3 reflect_light; 
     trace_ray(reflect_ray, recursion - 1, t_max, &reflect_light);                       // trace the reflected ray
 
@@ -192,7 +239,7 @@ void RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, float
     static constexpr float n_ratio      = n_air / n_glass;
     static constexpr float n_ratio_inv  = n_glass / n_air;
 
-    rt::Ray refract_ray = {I, glm::refract(ray.direction, N, n_ratio)};                 // let the incoming light ray refract at the entrance of the sphere
+    rt::ray_t refract_ray = {I, glm::refract(ray.direction, N, n_ratio)};                 // let the incoming light ray refract at the entrance of the sphere
 
     float t_back        = hit->intersect(refract_ray, t_max, RT_INTERSECTION_CONSIDER_INSIDE);      // back-side intersecion
     glm::vec3 i_back    = refract_ray.origin + (t_back - 0.0001f) * refract_ray.direction;          // intersection point of the back-side
@@ -204,20 +251,22 @@ void RT_Application::closest_hit_shader(const rt::Ray& ray, int recursion, float
     trace_ray(refract_ray, recursion - 1, t_max, &refract_light);                       // trace the refracted ray
 
     // calculate final color result -> A + R + T = 100%
-    const float absorb  = hit_sphere->material().roughness;
-    const float reflect = 1.0f - hit_sphere->material().roughness;
+    const float absorb  = mtl->roughness();
+    const float reflect = 1.0f - mtl->roughness();
 
-    out_color = hit_sphere->material().apha * (absorb * absorb_light + reflect * reflect_light) + (1.0f - hit_sphere->material().apha) * refract_light;
+    out_color = mtl->opacity() * (absorb * absorb_light + reflect * reflect_light) + (1.0f - mtl->opacity()) * refract_light;
     *((glm::vec3*)ray_payload) = out_color;
 }
 
-void RT_Application::miss_shader(const rt::Ray& ray, int recursuon, float t_max, void* ray_payload)
+void RT_Application::miss_shader(const rt::ray_t& ray, int recursuon, float t_max, void* ray_payload)
 {
-    glm::vec3 color = glm::vec3(this->environment.sample(ray.direction));
-    constexpr float HDRmax = 2.0f;
-    const float x = HDRmax / (HDRmax + 1);
-    color = (color * x) / (glm::vec3(1.0f) - color * x);
-    *((glm::vec3*)ray_payload) = color;
+    //glm::vec3 color = glm::vec3(this->cubemap.sample(ray.direction));
+    //constexpr float HDRmax = 2.0f;
+    //const float x = HDRmax / (HDRmax + 1);
+    //color = (color * x) / (glm::vec3(1.0f) - color * x);
+    //*((glm::vec3*)ray_payload) = color;
+
+    *((glm::vec3*)ray_payload) = this->spherical_env.sample(glm::vec4(ray.direction.x, ray.direction.y, ray.direction.z, 0.0f));
 }
 
 void RT_Application::app_run(void)
@@ -225,7 +274,7 @@ void RT_Application::app_run(void)
     this->run();
 }
 
-const rt::Color3ui8* RT_Application::fetch_pixels(void) noexcept
+const uint8_t* RT_Application::fetch_pixels(void) noexcept
 {
-    return this->get_framebuffer().buff;
+    return this->get_framebuffer().map_rdonly();
 }

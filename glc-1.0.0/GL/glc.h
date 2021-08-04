@@ -1,3 +1,14 @@
+/**
+* @file     glc.h
+* @brief    Useful functions for OpenGL image dimmension conversions.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
 #ifndef GLC_H_INCLUDED
 #define GLC_H_INCLUDED
 

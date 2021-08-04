@@ -17,19 +17,21 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib/stb_master")
 # compile and link the internal ray tracing source files into a seperate library
 # can also be used as an external library
 add_library(ray_tracing_static STATIC 
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/primitive.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/sphere.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/distancesphere.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/infplane.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/light.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/buffer.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/cubemap.cpp"
-			"${CMAKE_CURRENT_SOURCE_DIR}/rt/src/app.cpp") 
+			"rt/primitive/primitive.cpp"
+			"rt/primitive/sphere.cpp"
+			"rt/primitive/distancesphere.cpp"
+			"rt/primitive/infplane.cpp"
+			
+			"rt/image/cubemap.cpp"
+			"rt/image/texture.cpp"
+
+			"rt/misc/buffer.cpp"
+			"rt/misc/app.cpp")
 
 # compile and link final executable
 add_executable(ray_tracer 
 			   "${CMAKE_CURRENT_SOURCE_DIR}/rt_app.cpp"
-			   "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+			   "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp" "rt/image/texture.cpp")
 
 # link external libraries to the executable
 target_link_libraries(ray_tracer

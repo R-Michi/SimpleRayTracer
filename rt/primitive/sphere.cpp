@@ -1,6 +1,16 @@
-#include "../sphere.h"
+/**
+* @file     sphere.cpp
+* @brief    Implementation of the sphere primitive.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
 
-#include <cmath>
+
+#include "sphere.h"
 
 using namespace rt;
 
@@ -14,7 +24,7 @@ Sphere::Sphere(const glm::vec3& center, float radius) noexcept : Primitive()
     this->set(center, radius);
 }
 
-Sphere::Sphere(const glm::vec3& center, float radius, const Material& mtl) noexcept : Primitive(mtl)
+Sphere::Sphere(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept : Primitive(attrib)
 {
     this->set(center, radius);
 }
@@ -28,7 +38,7 @@ Sphere& Sphere::operator= (const Sphere& sphere)  noexcept
 {
     this->_center   = sphere._center;
     this->_radius   = sphere._radius;
-    this->_mtl      = sphere._mtl;
+    this->attrib    = sphere.attrib;
     return *this;
 }
 
@@ -45,8 +55,8 @@ Sphere& Sphere::operator= (Sphere&& sphere) noexcept
     this->_radius   = sphere._radius;
     sphere._radius  = 0.0f;
 
-    this->_mtl      = sphere._mtl;
-    sphere._mtl     = {{0.0f, 0.0f, 0.0f}, 1.0f, 0.0f, 1.0f};
+    this->attrib    = sphere.attrib;
+    sphere.attrib   = nullptr;
     return *this;
 }
 
@@ -56,11 +66,11 @@ void Sphere::set(const glm::vec3& center, float radius) noexcept
     this->_radius = radius;
 }
 
-void Sphere::set(const glm::vec3& center, float radius, const Material& mtl) noexcept
+void Sphere::set(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept
 {
     this->_center   = center;
     this->_radius   = radius;
-    this->_mtl      = mtl;
+    this->attrib    = attrib;
 }
 
 void Sphere::set_center(const glm::vec3& center) noexcept
@@ -73,11 +83,11 @@ void Sphere::set_radius(float radius) noexcept
     this->_radius = radius;
 }
 
-float Sphere::_intersect(const Ray& ray, float t_max, int flags) const
+float Sphere::_intersect(const ray_t& ray, float t_max, int flags) const
 {
     /*  The intersecion point is a quadratic function: ax^2 + bx + c = 0
         These following lines calculate the parameter a, b, c of that function 
-        The parameter 'a' is not calculated because ray.direction * ray.direction is always be 1 because the direction
+        The parameter 'a' is not calculated because ray.direction * ray.direction is always 1 because the direction
         of the ray is a unit vector. */
     glm::vec3 oc        = ray.origin - this->_center;  
     const float b       = 2 * glm::dot(ray.direction, oc);
@@ -122,7 +132,7 @@ float Sphere::_intersect(const Ray& ray, float t_max, int flags) const
     return t_max;
 }
 
-float Sphere::intersect(const Ray& ray, float t_max, int flags) const
+float Sphere::intersect(const ray_t& ray, float t_max, int flags) const
 {
     return this->_intersect(ray, t_max, flags);
 }

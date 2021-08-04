@@ -1,5 +1,16 @@
-#include "../buffer.h"
+/**
+* @file     buffer.cpp
+* @brief    Implementation of the primitive buffer.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
 
+
+#include "buffer.h"
 #include <malloc.h>
 
 using namespace rt;
@@ -21,7 +32,7 @@ Buffer::Buffer(const Buffer& buff)
 
 Buffer& Buffer::operator= (const Buffer& buff)
 {
-    this->set_layout(buff._layout_info);           // copy layout information
+    this->set_layout(buff._layout_info);                // copy layout information
     this->clear();                                      // clear own buffer memory
     for(size_t i = 0; i < buff._layout_info.size; i++)  // copy other instance's memory into own memory    
     { 
@@ -38,11 +49,11 @@ Buffer::Buffer(Buffer&& buff)
 
 Buffer& Buffer::operator= (Buffer&& buff)
 {
-    this->set_layout(buff._layout_info);           // copy layout information
+    this->set_layout(buff._layout_info);                // copy layout information
     this->clear();                                      // clear own memory
     for(size_t i = 0; i < buff._layout_info.size; i++)  // copy other instance's memory into own memory   
         this->_buff[i] = buff._buff[i]->clone_dynamic();
-    buff.set_layout(BufferLayout());           // set other instance's layout information to default values, other instance's memory gets cleared automatically
+    buff.set_layout(BufferLayout());                    // set other instance's layout information to default values, other instance's memory gets cleared automatically
     return *this;
 }
 
@@ -60,7 +71,7 @@ void Buffer::set_layout(const BufferLayout& layout_info)
 BufferError Buffer::data(size_t pos, Primitive* prim)
 {
     if(pos >= this->_buff.size())
-        return BufferError::RT_BUFFER_OVERFLOW;
+        return BufferError::RT_BUFFER_ERROR_OVERFLOW;
 
     if(this->_buff[pos] != nullptr)
     {

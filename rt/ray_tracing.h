@@ -1,22 +1,25 @@
-#ifndef __rt_ray_tracing_h__
-#define __rt_ray_tracing_h__
+/**
+* @file     ray_tracing.h
+* @brief    Main include-file for the ray-tracing library.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
 
-// include ray tracing types
-#include "rt_types.h"
+#pragma once
 
-// include light algorithm
-#include "light.h"
+// include texture
+#include "image/texture.h"
+#include "image/spherical_map.h"
+#include "image/cubemap.h"
 
-// include primitives
-#include "sphere.h"
-#include "distancesphere.h"
-#include "infplane.h"
+// include primitive
+#include "primitive/sphere.h"
+#include "primitive/distancesphere.h"
+#include "primitive/infplane.h"
 
-// include primitive buffer and cubemap
-#include "buffer.h"
-#include "cubemap.h"
-
-// include ray tracing application
-#include "app.h"
-
-#endif //__rt_ray_tracing_h__
+// include ray tracing
+#include "misc/app.h"

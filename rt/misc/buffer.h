@@ -1,10 +1,19 @@
-#ifndef __rt_buffer_h__
-#define __rt_buffer_h__
+/**
+* @file     buffer.h
+* @brief    Buffer used for the ray-tracing pipeline, that can store primitives.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
 
-#include "rt_types.h"
+
+#pragma once
+
 #include "rt_error.h"
-#include "primitive.h"
-
+#include "../primitive/primitive.h"
 #include <vector>
 
 namespace rt
@@ -26,7 +35,6 @@ namespace rt
 
     public:
         /**
-         *  Default constructor of the buffer.
          *  NOTE: By default the buffer info is set to its default values,
          *  which means the buffer is invalid.
          *  Adding data to the buffer will have no effect, instead a RT_BUFFER_INVALID_INFO will
@@ -36,62 +44,48 @@ namespace rt
         Buffer(void);
 
         /**
-         *  Constructor which specifies the buffer layout.
          *  NOTE: Wrong parameters of the BufferLayoutInfo will force
          *  the buffer to be invalid.
-         *  @param layout_info -> Buffer-layout information.
+         *  @param[in] layout_info: Buffer-layout information.
          */
         explicit Buffer(const BufferLayout& layout_info);
 
-        /**
-         *  Copies an object into the own instance.
-         *  @param buff -> Buffer to copy.
-         */
         Buffer(const Buffer& buff);
         Buffer& operator= (const Buffer& buff);
-
-        /**
-         *  Moves an object into the own instance.
-         *  @param buff -> Buffer to move.
-         */
         Buffer(Buffer&& buff);
         Buffer& operator= (Buffer&& buff);
 
-        /**
-         *  The destructor will automatically clear dynamic memory within the buffer.
-         *  This also includes mapped buffers.
-         */
         virtual ~Buffer(void);
 
         /**
-         *  Sets / updates the buffer layout info.
+         *  @brief Sets / updates the buffer layout info.
          *  NOTE: This will may cause some changes to the internal
          *  data buffer itself. Be careful if you execute this method,
          *  you have to know what you are doing!
-         *  @param layout_info -> Buffer-layout information.
+         *  @param[in] layout_info: Buffer-layout information.
          */
         void set_layout(const BufferLayout& layout_info);
 
         /**
          *  Loads one primitive into the buffer at position @param pos.
-         *  @param prim -> The primitive to load in.
-         *  @param pos -> Position to put the primitive in.
-         *  @return -> Error if something went wrong.
+         *  @param[in] prim: The primitive to load in.
+         *  @param[in] pos: Position to put the primitive in.
+         *  @return Error if something went wrong.
          */
         BufferError data(size_t pos, Primitive* prim);
 
         /**
-         *  Loads an array of primitives into the buffer.
+         *  @brief Loads an array of primitives into the buffer.
          *  Array cannot contain mixed primitives.
-         *  @param begin -> Offset to the first primitive.
-         *  @param count -> Number of Primitives to copy into the buffer.
-         *  @param prims -> The array of primitives.
-         *  @return -> Error if something went wrong.
+         *  @param[in] begin: Offset to the first primitive.
+         *  @param[in] count: Number of Primitives to copy into the buffer.
+         *  @param[in] prims: The array of primitives.
+         *  @return Error if something went wrong.
          */
         BufferError data(size_t begin, size_t count, Primitive* prims);
 
         /**
-         *  @return ->  The the internal array of primitive pointers.
+         *  @return The the internal array of primitive pointers.
          *              The mapped memory is read write.
          *  NOTE: If the buffer-layout is invalid this function will return 'nullptr'.
          */
@@ -99,14 +93,14 @@ namespace rt
         {return (this->_buff.size() == 0) ? nullptr : this->_buff.data();}
 
         /**
-         *  @return ->  The the internal array of primitive pointers.
+         *  @return The the internal array of primitive pointers.
          *              The mapped memory is read only.
          *  NOTE: If the buffer-layout is invalid this function will return 'nullptr'.
          */
         inline const Primitive * const * map_rdonly(void) const noexcept
         {return (this->_buff.size() == 0) ? nullptr : this->_buff.data();}
 
-        /// @return -> Buffer-layout information.
+        /** @return Buffer-layout information. */
         inline const BufferLayout& layout(void) const noexcept
         {return this->_layout_info;}
 
@@ -114,13 +108,11 @@ namespace rt
         void clear(void) noexcept;
 
         /**
-         *  Cleares memory in a given range.
+         *  @brief Cleares memory in a given range.
          *  Parameters that would be out of range will be ignored.
-         *  @param begin -> Begin index to clear.
-         *  @param end -> End index to clear.
+         *  @param[in] begin: Begin index to clear.
+         *  @param[in] end: End index to clear.
          */
         void clearEXT(size_t begin, size_t end) noexcept;
     };
 }
-
-#endif //__rt_buffer_h__

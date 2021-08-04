@@ -1,15 +1,79 @@
-#ifndef __rt_app_h__
-#define __rt_app_h__
+/**
+* @file     rt_app.h
+* @brief    Header file of the ray_tracing test application.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
+#pragma once
 
 #include "rt/ray_tracing.h"
-
 #include <cmath>
+
+class Material : public rt::PrimitiveAttribute
+{
+private:
+    glm::vec3 _albedo;
+    float _roughness;
+    float _metallic;
+    float _opacity;
+
+public:
+    explicit Material(const glm::vec3& albedo = glm::vec3(0.0f), float roughness = 0.0f, float metallic = 0.0f, float opacity = 1.0f)
+    { 
+        this->_albedo = albedo;
+        this->_roughness = roughness;
+        this->_metallic = metallic;
+        this->_opacity = opacity;
+    }
+
+    Material(const Material& mtl)
+    {
+        *this = mtl;
+    }
+
+    Material& operator= (const Material& mtl)
+    {
+        this->_albedo = mtl._albedo;
+        this->_roughness = mtl._roughness;
+        this->_metallic = mtl._metallic;
+        this->_opacity = mtl._opacity;
+        return *this;
+    }
+
+    ~Material(void) {}
+
+    glm::vec3&          albedo(void)    noexcept        { return this->_albedo; }
+    const glm::vec3&    albedo(void)    const noexcept  { return this->_albedo; }
+    float&              roughness(void) noexcept        { return this->_roughness; }
+    float               roughness(void) const noexcept  { return this->_roughness; }
+    float&              metallic(void)  noexcept        { return this->_metallic; }
+    float               metallic(void)  const noexcept  { return this->_metallic; }
+    float&              opacity(void)   noexcept        { return this->_opacity; }
+    float               opacity(void)   const noexcept  { return this->_opacity; }
+};
+
+struct Light
+{
+    glm::vec3 direction;
+    glm::vec3 intensity;
+};
 
 class RT_Application : protected rt::RayTracer
 {
 private:
-    rt::Light light;
-    rt::Cubemap environment;
+    Light light;
+    rt::Texture2D<uint8_t, float> tex;
+    rt::SphericalMap<float, float> spherical_env;
+    rt::Cubemap<uint8_t, float> cubemap;
+
+    Material mtl1;
+    Material mtl2;
+    Material mtl3;
 
     /**
      *  Calculates the distance to the closest sphere (primitive / object) from a given point P.
@@ -31,12 +95,12 @@ private:
      *  @param softness -> Defines how soft is the shadow (size of the penumbra), whereby 0 is infinite soft.
      *  @return -> A value between 0 and 1 that determines how much the point is in shadow.
      */
-    float shadow(const rt::Ray& shadow_ray, float t_max, float softness);
+    float shadow(const rt::ray_t& shadow_ray, float t_max, float softness);
 
 protected:
-    glm::vec3 ray_generation_shader(float x, float y);
-    void closest_hit_shader(const rt::Ray& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload);
-    void miss_shader(const rt::Ray& ray, int recursuon, float t_max, void* ray_payload);
+    glm::vec3 ray_generation_shader(uint32_t x, uint32_t y);
+    void closest_hit_shader(const rt::ray_t& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload);
+    void miss_shader(const rt::ray_t& ray, int recursuon, float t_max, void* ray_payload);
 
 public:
     // constants
@@ -49,7 +113,5 @@ public:
     virtual ~RT_Application(void);
 
     void app_run(void);
-    const rt::Color3ui8* fetch_pixels(void) noexcept;
+    const uint8_t* fetch_pixels(void) noexcept;
 };
-
-#endif //__rt_app_h__

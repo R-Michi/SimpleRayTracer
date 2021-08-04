@@ -1,4 +1,16 @@
-#include "../infplane.h"
+/**
+* @file     infplane.cpp
+* @brief    Implementation of the infinite plane primitive.
+* @author   Michael Reim / Github: R-Michi
+* Copyright (c) 2021 by Michael Reim
+*
+* This code is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
+
+#include "infplane.h"
 
 #include <cmath>
 
@@ -14,7 +26,7 @@ InfPlane::InfPlane(const glm::vec3& direction, const glm::vec3& origin) noexcept
     this->set(direction, origin);
 }
 
-InfPlane::InfPlane(const glm::vec3& direction, const glm::vec3& origin, const Material& mtl) noexcept : Primitive(mtl)
+InfPlane::InfPlane(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute* attrib) noexcept : Primitive(attrib)
 {
     this->set(direction, origin);
 }
@@ -28,7 +40,7 @@ InfPlane& InfPlane::operator= (const InfPlane& inf_plane) noexcept
 {
     this->_direction    = inf_plane._direction;
     this->_origin       = inf_plane._origin;
-    this->_mtl          = inf_plane._mtl;
+    this->attrib        = inf_plane.attrib;
     return *this;
 }
 
@@ -45,8 +57,8 @@ InfPlane& InfPlane::operator= (InfPlane&& inf_plane) noexcept
     this->_origin           = inf_plane._origin;
     inf_plane._origin       = {0.0f, 0.0f, 0.0f};
 
-    this->_mtl              = inf_plane._mtl;
-    this->_mtl              = {{0.0f, 0.0f, 0.0f}, 1.0f, 0.0f, 1.0f};
+    this->attrib            = inf_plane.attrib;
+    inf_plane.attrib        = nullptr;
     return *this;
 }
 
@@ -56,11 +68,11 @@ void InfPlane::set(const glm::vec3& direction, const glm::vec3& origin) noexcept
     this->_origin       = origin;
 }
 
-void InfPlane::set(const glm::vec3& direction, const glm::vec3& origin, const Material& mtl) noexcept
+void InfPlane::set(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute* attrib) noexcept
 {
     this->_direction    = direction;
     this->_origin       = origin;
-    this->_mtl          = mtl;
+    this->attrib        = attrib;
 }
 
 void InfPlane::set_direction(const glm::vec3& direction) noexcept
@@ -73,7 +85,7 @@ void InfPlane::set_origin(const glm::vec3& origin) noexcept
     this->_origin = origin;
 }
 
-float InfPlane::intersect(const Ray& ray, float t_max, int flags) const
+float InfPlane::intersect(const ray_t& ray, float t_max, int flags) const
 {
     const float denom = glm::dot(this->_direction, ray.direction);
     // If the denominator is smaller or equal 0.0 then the intersection point is infinitely far away.
