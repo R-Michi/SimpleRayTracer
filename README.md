@@ -2,7 +2,7 @@
 This library implements a simple ray-tracing pipeline.
 
 #details
-Version: 1.0.0
+Version: 1.0.1
 Release date: 04.08.2021
 
 #requierements
@@ -12,3 +12,7 @@ Release date: 04.08.2021
 #contact
 If you notice any bugs or want to give feedback, write to: 
 https://github.com/R-Michi/SimpleRayTracer/issues
+
+#version 1.0.1
+- made marked class methods as const
+- added noexcept

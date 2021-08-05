@@ -48,7 +48,7 @@ namespace rt
         using vec_ret = glm::vec<4, T_dst, glm::defaultp>;
 
     private:
-        static constexpr type_t get_src_type(void)
+        static constexpr type_t get_src_type(void) noexcept
         {
             if (std::is_integral<T_src>::value && std::is_signed<T_src>::value      && sizeof(T_src) == sizeof(int8_t))     return RT_INT_8;
             if (std::is_integral<T_src>::value && std::is_unsigned<T_src>::value    && sizeof(T_src) == sizeof(uint8_t))    return RT_UINT_8;
@@ -62,7 +62,7 @@ namespace rt
             if (std::is_floating_point<T_src>::value && sizeof(T_src) == sizeof(double)) return RT_DOUBLE;
             return RT_INVALID_TYPE;
         }
-        static constexpr type_t get_dst_type(void)
+        static constexpr type_t get_dst_type(void) noexcept
         {
             if (std::is_integral<T_dst>::value && std::is_signed<T_dst>::value      && sizeof(T_dst) == sizeof(int8_t))     return RT_INT_8;
             if (std::is_integral<T_dst>::value && std::is_unsigned<T_dst>::value    && sizeof(T_dst) == sizeof(uint8_t))    return RT_UINT_8;
@@ -87,7 +87,7 @@ namespace rt
         *   @param[in] v: source-type
         *   @return destination-type
         */
-        static T_dst convert_type(T_src v)
+        static T_dst convert_type(T_src v) noexcept
         {
             // If src and dst are both floating-point type, the value only gets casted.
             if (std::is_floating_point<T_src>::value && std::is_floating_point<T_dst>::value) return static_cast<T_dst>(v);
@@ -102,7 +102,7 @@ namespace rt
         *   @param[in] pos: pixel-coordinate
         *   @param[out] color: color of the pixel
         */
-        void _sample_px(const glm::uvec4& pos, vec_ret& color)
+        void _sample_px(const glm::uvec4& pos, vec_ret& color) noexcept
         {
             glm::uvec4 _pos;
             this->combute_address_mode(pos, _pos);
@@ -136,7 +136,7 @@ namespace rt
         *   @param[in] address_index: 0-indexed dimmension number
         *   @return x/y/z-pixel-coordinate after address mode computation.
         */
-        uint32_t combute_address_mode_comp(uint32_t pos, size_t address_idx)
+        uint32_t combute_address_mode_comp(uint32_t pos, size_t address_idx) const noexcept
         {
             const uint32_t* const cip = (uint32_t*)&this->create_info;
             const uint32_t s = cip[address_idx];
@@ -158,7 +158,7 @@ namespace rt
         *   @praram[in] pos: uvw-coordinate
         *   @param[out] color: Color of the sample.
         */
-        void _sample(const glm::vec4& pos, vec_ret& color)
+        void _sample(const glm::vec4& pos, vec_ret& color) noexcept
         {
             alignas(16) glm::uvec4 px_pos;
             alignas(16) glm::vec4 interpos;
@@ -239,7 +239,7 @@ namespace rt
         *   @param[out] _floor: floored pixel-coordinate
         *   @param[out] _fract: Fractional part of the pixel-coordinate.
         */
-        inline void combute_image_pos(const glm::vec4* pos, glm::uvec4* _floor, glm::vec4* _fract)
+        inline void combute_image_pos(const glm::vec4* pos, glm::uvec4* _floor, glm::vec4* _fract) const noexcept
         {
             __m128 a = _mm_load_ps((const float*)pos);                         // load image positions
             __m128 b = _mm_cvtepi32_ps(_mm_load_si128((const __m128i*)&this->create_info)); // load image dimmensions and cast to float
@@ -255,7 +255,7 @@ namespace rt
         *   @param[in] pos: pixel-coordinate
         *   @param[out] pos2: Pixel-coordinate after address mode computation.
         */
-        void combute_address_mode(const glm::uvec4& pos, glm::uvec4& pos2)
+        void combute_address_mode(const glm::uvec4& pos, glm::uvec4& pos2) const noexcept
         {
             pos2.x = combute_address_mode_comp(pos.x, 0);
             pos2.y = combute_address_mode_comp(pos.y, 1);
@@ -280,7 +280,7 @@ namespace rt
         *   @param[in] v: Address-mode in the v-direction.
         *   @param[in] w: Address-mode in the w-direction.
         */
-        void set_address_mode(TextureAddressMode u, TextureAddressMode v, TextureAddressMode w)  
+        void set_address_mode(TextureAddressMode u, TextureAddressMode v, TextureAddressMode w) noexcept
         { 
             this->address_mode[0] = u;
             this->address_mode[1] = v;
@@ -288,10 +288,10 @@ namespace rt
         }
 
         /** @param[in] filter: filter operation */
-        void set_filter(Filter filter)                          { this->filter = filter; }
+        void set_filter(Filter filter) noexcept { this->filter = filter; }
 
         /** @param[in] border_color: Color of the border for oversampling. */
-        void set_border_color(const vec_ret& border_color)      { this->border_color = border_color; }
+        void set_border_color(const vec_ret& border_color) noexcept { this->border_color = border_color; }
 
         /**
         *   @brief Loads the pixels into the texture object.
@@ -300,7 +300,7 @@ namespace rt
         *   @param[in] byte_data: pixels
         *   @return image error
         */
-        ImageError load(const ImageCreateInfo& ci, const T_src* byte_data)
+        ImageError load(const ImageCreateInfo& ci, const T_src* byte_data) noexcept
         {
             if (byte_data == nullptr) return RT_IMAGE_ERROR_NULL;
             if (ci.width == 0 || ci.height == 0 || ci.depth == 0) return RT_IMAGE_ERROR_ZERO_SIZE;

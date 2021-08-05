@@ -24,7 +24,7 @@ namespace rt
 
     public:
         /** @param[in] filter: filter operation  */
-        explicit Cubemap(Filter filter = RT_FILTER_NEAREST)
+        explicit Cubemap(Filter filter = RT_FILTER_NEAREST) noexcept
         {
             for (uint32_t i = 0; i < 6; i++)
             {
@@ -44,13 +44,13 @@ namespace rt
         *   @param[in] data: pixels
         *   @return image error
         */
-        ImageError load(const ImageCreateInfo& ci, CubemapFace face, const T_src* data)
+        ImageError load(const ImageCreateInfo& ci, CubemapFace face, const T_src* data) noexcept
         {
             return this->faces[static_cast<uint32_t>(face)].load(ci, data);
         }
 
         /** @brief Frees the allocated memory of the cubemap. */
-        void free(void)
+        void free(void) noexcept
         {
             for (uint32_t i = 0; i < 6; i++)
                 this->faces[i].free();
@@ -61,7 +61,7 @@ namespace rt
         *   @param[in] direction: sample direction
         *   @return Color of the sample.
         */
-        glm::vec4 sample(const glm::vec3& direction)
+        virtual glm::vec4 sample(const glm::vec3& direction)
         {
             /* GET UV COORDINATES */
             const glm::vec3 abs_dir = glm::abs(direction);

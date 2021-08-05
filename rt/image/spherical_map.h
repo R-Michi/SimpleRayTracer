@@ -21,7 +21,7 @@ namespace rt
     private:
         using vec_ret = typename SphericalMap::vec_ret;
     public:
-        explicit SphericalMap(Filter filter = RT_FILTER_NEAREST, const vec_ret& border_color = vec_ret(0.0)) 
+        explicit SphericalMap(Filter filter = RT_FILTER_NEAREST, const vec_ret& border_color = vec_ret(0.0)) noexcept
         : Texture2D<T_src, T_dst>(filter, border_color) {}
         virtual ~SphericalMap(void) {}
 

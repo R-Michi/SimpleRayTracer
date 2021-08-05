@@ -2,3 +2,4 @@ lib
 out
 .vs
 CMakeSettings.json
+versions

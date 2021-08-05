@@ -199,7 +199,7 @@ namespace rt
         /**
         *   @return The number of pixel the image can store.
         */
-        inline size_t count(void)
+        inline size_t count(void) const noexcept
         {
             switch (dimmensions)
             {
@@ -213,7 +213,7 @@ namespace rt
         /**
         *   @return The size in bytes of the image.
         */
-        inline size_t size(void)
+        inline size_t size(void) const noexcept
         {
             return sizeof(T) * this->create_info.channels * this->count();
         }
@@ -221,7 +221,7 @@ namespace rt
         /**
         *   @return Width of the image.
         */
-        inline uint32_t width(void)
+        inline uint32_t width(void) const noexcept
         {
             return this->create_info.width;
         }
@@ -229,7 +229,7 @@ namespace rt
         /**
         *   @return Height of the image.
         */
-        inline uint32_t height(void)
+        inline uint32_t height(void) const noexcept
         {
             return (dimmensions > 1) ? this->create_info.height : 1;
         }
@@ -237,7 +237,7 @@ namespace rt
         /**
         *   @return Depth of the image.
         */
-        inline uint32_t depth(void)
+        inline uint32_t depth(void) const noexcept
         {
             return (dimmensions > 2) ? this->create_info.depth : 1;
         }
@@ -245,7 +245,7 @@ namespace rt
         /**
         *   @return Number of color channels of the image.
         */
-        inline uint32_t channel_count(void)
+        inline uint32_t channel_count(void) const noexcept
         {
             return this->create_info.channels;
         }

@@ -20,7 +20,7 @@ namespace rt
     {
     public:
         Framebuffer(void) : Image2D<uint8_t>() {}
-        explicit Framebuffer(const ImageCreateInfo& ci) : Image2D<uint8_t>(ci) {}
+        explicit Framebuffer(const ImageCreateInfo& ci) noexcept : Image2D<uint8_t>(ci) {}
         virtual ~Framebuffer(void) {}
     };
 }
