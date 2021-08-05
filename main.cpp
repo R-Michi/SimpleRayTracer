@@ -45,5 +45,6 @@ int main()
         int64_t t_out = duration_cast<milliseconds>(t1_out - t0_out).count();       // get time duration of image writing operation
         printf("Writing time: %" PRId64 "\n", t_out);
     }
+
     return (int)t_render;
 }

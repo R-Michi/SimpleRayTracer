@@ -7,7 +7,7 @@
 * This code is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-*/
+*/ 
 
 #pragma once
 
@@ -45,7 +45,9 @@ public:
         return *this;
     }
 
-    ~Material(void) {}
+    virtual ~Material(void) {}
+    virtual rt::PrimitiveAttribute* clone_dynamic(void) const
+    { return new Material(this->_albedo, this->_roughness, this->_metallic, this->_opacity); }
 
     glm::vec3&          albedo(void)    noexcept        { return this->_albedo; }
     const glm::vec3&    albedo(void)    const noexcept  { return this->_albedo; }
@@ -55,6 +57,7 @@ public:
     float               metallic(void)  const noexcept  { return this->_metallic; }
     float&              opacity(void)   noexcept        { return this->_opacity; }
     float               opacity(void)   const noexcept  { return this->_opacity; }
+
 };
 
 struct Light
@@ -70,10 +73,6 @@ private:
     rt::Texture2D<uint8_t, float> tex;
     rt::SphericalMap<float, float> spherical_env;
     rt::Cubemap<uint8_t, float> cubemap;
-
-    Material mtl1;
-    Material mtl2;
-    Material mtl3;
 
     /**
      *  Calculates the distance to the closest sphere (primitive / object) from a given point P.

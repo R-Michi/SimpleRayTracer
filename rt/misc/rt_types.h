@@ -23,6 +23,7 @@ namespace rt
     public:
         PrimitiveAttribute(void) {}
         virtual ~PrimitiveAttribute(void) {}
+        virtual PrimitiveAttribute* clone_dynamic(void) const = 0;
     };
 
     // ================ STRUCTS ================

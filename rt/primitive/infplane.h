@@ -36,9 +36,9 @@ namespace rt
         /**
          *  @param[in] direction: The direction in which the plane points.
          *  @param[in] origin: The plane's origin in 3D-space.
-         *  @param[in] attrib: primitive attribute pointer
+         *  @param[in] attrib: primitive attribute
          */
-        InfPlane(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute* attrib) noexcept;
+        InfPlane(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute& attrib) noexcept;
         
         InfPlane(const InfPlane& inf_plane) noexcept;
         InfPlane& operator= (const InfPlane& inf_plane) noexcept;
@@ -57,9 +57,9 @@ namespace rt
         /**
          *  @param[in] direction: The direction in which the plane points.
          *  @param[in] origin: The plane's origin in 3D-space.
-         *  @param[in] attrib: primitive attribute pointer
+         *  @param[in] attrib: primitive attribute
          */
-        void set(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute* attrib) noexcept;
+        void set(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute& attrib) noexcept;
 
         /**
          *  @brief Sets the direction of the plane.

@@ -10,6 +10,7 @@
 */
 
 #include "primitive.h"
+#include <iostream>
 
 using namespace rt;
 
@@ -18,12 +19,24 @@ Primitive::Primitive(void) noexcept
     this->attrib = nullptr;
 }
 
-Primitive::Primitive(const PrimitiveAttribute* attrib) noexcept
+Primitive::~Primitive(void)
 {
-    this->attrib = attrib;
+    delete this->attrib;
+}
+
+Primitive::Primitive(const PrimitiveAttribute& attrib) noexcept : Primitive()
+{
+    this->set_attribute(attrib);
 }
 
 void Primitive::set_attribute(const PrimitiveAttribute* attrib) noexcept
 {
-    this->attrib = attrib;
+    if (attrib == nullptr) return;
+    if(this->attrib != nullptr) delete this->attrib;    // delete old attribute
+    this->attrib = attrib->clone_dynamic();             // allocate new one
+}
+
+void Primitive::set_attribute(const PrimitiveAttribute& attrib) noexcept
+{
+    this->set_attribute(&attrib);
 }

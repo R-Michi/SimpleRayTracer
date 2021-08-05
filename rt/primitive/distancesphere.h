@@ -31,9 +31,9 @@ namespace rt
         /**
          *  @param[in] center: Center of the sphere in the 3D-space.
          *  @param[in] radius: Radius of the sphere.
-         *  @param[in] attrib: primitive attribute pointer
+         *  @param[in] attrib: primitive attribute
          */
-        DistanceSphere(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept;
+        DistanceSphere(const glm::vec3& center, float radius, const PrimitiveAttribute& attrib) noexcept;
 
         DistanceSphere(const DistanceSphere& sphere) noexcept;
         DistanceSphere(DistanceSphere&& sphere) noexcept;

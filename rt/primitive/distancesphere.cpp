@@ -20,7 +20,7 @@ DistanceSphere::DistanceSphere(void) noexcept
 DistanceSphere::DistanceSphere(const glm::vec3& center, float radius) noexcept
 : Sphere(center, radius) {}
 
-DistanceSphere::DistanceSphere(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept
+DistanceSphere::DistanceSphere(const glm::vec3& center, float radius, const PrimitiveAttribute& attrib) noexcept
 : Sphere(center, radius, attrib) {}
 
 DistanceSphere::DistanceSphere(const DistanceSphere& sphere) noexcept

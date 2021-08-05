@@ -36,9 +36,9 @@ namespace rt
         /**
          *  @param[in] center: Center of the sphere in the 3D-space.
          *  @param[in] radius: Radius of the sphere.
-         *  @param[in] attrib: primitive attribute pointer
+         *  @param[in] attrib: primitive attribute
          */
-        Sphere(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept;
+        Sphere(const glm::vec3& center, float radius, const PrimitiveAttribute& attrib) noexcept;
 
         Sphere(const Sphere& sphere) noexcept;
         Sphere& operator= (const Sphere& sphere) noexcept;
@@ -57,9 +57,9 @@ namespace rt
         /**
          *  @param[in] center: Center of the sphere in the 3D-space.
          *  @param[in] radius: Radius of the sphere.
-         *  @param[in] attrib: primitive attribute pointer
+         *  @param[in] attrib: primitive attribute
          */
-        void set(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept;
+        void set(const glm::vec3& center, float radius, const PrimitiveAttribute& attrib) noexcept;
 
         /**
          *  @brief Sets the center of the sphere.

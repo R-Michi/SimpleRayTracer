@@ -24,7 +24,7 @@ Sphere::Sphere(const glm::vec3& center, float radius) noexcept : Primitive()
     this->set(center, radius);
 }
 
-Sphere::Sphere(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept : Primitive(attrib)
+Sphere::Sphere(const glm::vec3& center, float radius, const PrimitiveAttribute& attrib) noexcept : Primitive(attrib)
 {
     this->set(center, radius);
 }
@@ -38,7 +38,7 @@ Sphere& Sphere::operator= (const Sphere& sphere)  noexcept
 {
     this->_center   = sphere._center;
     this->_radius   = sphere._radius;
-    this->attrib    = sphere.attrib;
+    this->set_attribute(sphere.attribute());
     return *this;
 }
 
@@ -55,8 +55,7 @@ Sphere& Sphere::operator= (Sphere&& sphere) noexcept
     this->_radius   = sphere._radius;
     sphere._radius  = 0.0f;
 
-    this->attrib    = sphere.attrib;
-    sphere.attrib   = nullptr;
+    this->set_attribute(sphere.attribute());
     return *this;
 }
 
@@ -66,11 +65,11 @@ void Sphere::set(const glm::vec3& center, float radius) noexcept
     this->_radius = radius;
 }
 
-void Sphere::set(const glm::vec3& center, float radius, const PrimitiveAttribute* attrib) noexcept
+void Sphere::set(const glm::vec3& center, float radius, const PrimitiveAttribute& attrib) noexcept
 {
     this->_center   = center;
     this->_radius   = radius;
-    this->attrib    = attrib;
+    this->set_attribute(attrib);
 }
 
 void Sphere::set_center(const glm::vec3& center) noexcept

@@ -18,21 +18,28 @@ namespace rt
 {
     class Primitive
     {
+    private:
+        PrimitiveAttribute* attrib;
+
     protected:
-        const PrimitiveAttribute* attrib;
-
-    public:
-        Primitive(void) noexcept;
-
-        /** @param[in] mtl: The primitives material properties. */
-        Primitive(const PrimitiveAttribute* attrib) noexcept;
-        virtual ~Primitive(void) noexcept {}
-
         /**
          *  @brief Sets the primitive's material properties.
          *  @param[in] attrib: primitive attribute pointer
          */
         void set_attribute(const PrimitiveAttribute* attrib) noexcept;
+
+    public:
+        Primitive(void) noexcept;
+
+        /** @param[in] attrib: primitive attribute */
+        Primitive(const PrimitiveAttribute& attrib) noexcept;
+        virtual ~Primitive(void);
+
+        /**
+         *  @brief Sets the primitive's material properties.
+         *  @param[in] attrib: primitive attribute
+         */
+        void set_attribute(const PrimitiveAttribute& attrib) noexcept;
 
         /** @return The primitive's material prperties */
         inline const PrimitiveAttribute* attribute(void) const noexcept

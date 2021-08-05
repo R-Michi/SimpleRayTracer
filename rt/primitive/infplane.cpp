@@ -26,7 +26,7 @@ InfPlane::InfPlane(const glm::vec3& direction, const glm::vec3& origin) noexcept
     this->set(direction, origin);
 }
 
-InfPlane::InfPlane(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute* attrib) noexcept : Primitive(attrib)
+InfPlane::InfPlane(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute& attrib) noexcept : Primitive(attrib)
 {
     this->set(direction, origin);
 }
@@ -40,7 +40,7 @@ InfPlane& InfPlane::operator= (const InfPlane& inf_plane) noexcept
 {
     this->_direction    = inf_plane._direction;
     this->_origin       = inf_plane._origin;
-    this->attrib        = inf_plane.attrib;
+    this->set_attribute(inf_plane.attribute());
     return *this;
 }
 
@@ -57,8 +57,7 @@ InfPlane& InfPlane::operator= (InfPlane&& inf_plane) noexcept
     this->_origin           = inf_plane._origin;
     inf_plane._origin       = {0.0f, 0.0f, 0.0f};
 
-    this->attrib            = inf_plane.attrib;
-    inf_plane.attrib        = nullptr;
+    this->set_attribute(inf_plane.attribute());
     return *this;
 }
 
@@ -68,11 +67,11 @@ void InfPlane::set(const glm::vec3& direction, const glm::vec3& origin) noexcept
     this->_origin       = origin;
 }
 
-void InfPlane::set(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute* attrib) noexcept
+void InfPlane::set(const glm::vec3& direction, const glm::vec3& origin, const PrimitiveAttribute& attrib) noexcept
 {
     this->_direction    = direction;
     this->_origin       = origin;
-    this->attrib        = attrib;
+    this->set_attribute(attrib);
 }
 
 void InfPlane::set_direction(const glm::vec3& direction) noexcept

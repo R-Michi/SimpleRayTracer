@@ -22,9 +22,6 @@ RT_Application::RT_Application(void)
         {-1.0f, 0.5f, 0.0f},
         {7.0f, 7.0f, 7.0f}
     };
-    this->mtl1 = Material(glm::vec3(0.0f, 0.0f, 1.0f), 0.5f, 0.8f, 1.0f);
-    this->mtl2 = Material(glm::vec3(0.0f, 1.0f, 0.0f), 0.5f, 0.8f, 1.0f);
-    this->mtl3 = Material(glm::vec3(1.0f, 1.0f, 1.0f), 0.5f, 0.8f, 1.0f);
 
     rt::Sphere spheres[PRIM_COUNT] =
     {
@@ -32,19 +29,19 @@ RT_Application::RT_Application(void)
         (
             {0.0f, 0.0f, 3.0f},
             1.0f,
-            &mtl1
+            Material(glm::vec3(0.0f, 0.0f, 1.0f), 0.5f, 0.8f, 1.0f)
         ),
         rt::Sphere
         (
             {3.0f, 0.0f, 3.0f},
             1.0f,
-            &mtl2
+            Material(glm::vec3(0.0f, 1.0f, 0.0f), 0.5f, 0.8f, 1.0f)
         ),
         rt::Sphere
         (
             {-1.75f, -1001.0f, 3.0f},
             1000.0f,
-            &mtl3
+            Material(glm::vec3(1.0f, 1.0f, 1.0f), 0.5f, 0.8f, 1.0f)
         )
     };
 
