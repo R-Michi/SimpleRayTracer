@@ -19,3 +19,6 @@ https://github.com/R-Michi/SimpleRayTracer/issues
 
 #version 1.0.2 | 2021-08-05
 - primitive attributes are now copied into the primitive class
+
+#version 1.0.3 | 2021-08-06
+- fixed bug: unused color channels remained undefined

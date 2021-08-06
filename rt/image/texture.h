@@ -126,8 +126,8 @@ namespace rt
             }
 
             // i is the channel index: access_index = pixel_base_index + channel_index
-            for (uint32_t i = 0; i < this->create_info.channels; i++)
-                c[i] = map[idx + i];
+            for (uint32_t i = 0; i < 4; i++)
+                c[i] = (i < this->create_info.channels) ? map[idx + i] : static_cast<T_dst>(0);
         }
 
         /**
