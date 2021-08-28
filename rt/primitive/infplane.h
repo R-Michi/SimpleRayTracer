@@ -82,7 +82,7 @@ namespace rt
         {return this->_origin;}
         
         /** @brief Intersection test for line - infinite plane - intersection. */
-        virtual float intersect(const ray_t& ray, float t_max, int flags) const;
+        virtual float intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const;
 
         /** @brief Distance from a 3D-point P to the closest point on the plane. */
         virtual float distance(const glm::vec3& p) const;

@@ -98,15 +98,15 @@ private:
 
 protected:
     glm::vec3 ray_generation_shader(uint32_t x, uint32_t y);
-    void closest_hit_shader(const rt::ray_t& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload);
+    void closest_hit_shader(const rt::ray_t& ray, int recursion, float t, float t_max, const rt::Primitive* hit, rt::RayHitInformation hit_info, void* ray_payload);
     void miss_shader(const rt::ray_t& ray, int recursuon, float t_max, void* ray_payload);
 
 public:
     // constants
-    static constexpr int32_t SCR_WIDTH      = 960 * 4;
-    static constexpr int32_t SCR_HEIGHT     = 540 * 4;
+    static constexpr int32_t SCR_WIDTH      = 960 * 2;
+    static constexpr int32_t SCR_HEIGHT     = 540 * 2;
     static constexpr size_t PRIM_COUNT      = 3;
-    static constexpr size_t RT_RECURSIONS   = 5;
+    static constexpr size_t RT_RECURSIONS   = 10;
 
     RT_Application(void);
     virtual ~RT_Application(void);

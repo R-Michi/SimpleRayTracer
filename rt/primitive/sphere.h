@@ -22,7 +22,7 @@ namespace rt
         float _radius;      // Radius of the sphere
 
         // Intersection test for ray - sphere - intersection.
-        float _intersect(const ray_t& ray, float t_max, int flags) const;
+        float _intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const;
 
     public:
         Sphere(void) noexcept;
@@ -82,7 +82,7 @@ namespace rt
         {return this->_radius;}
 
         /** @brief Intersection test for ray - sphere - intersection. */
-        virtual float intersect(const ray_t& ray, float t_max, int flags) const;
+        virtual float intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const;
 
         /** @brief Distance from a 3D-point P to the closest point on the sphere. */
         virtual float distance(const glm::vec3& p) const;

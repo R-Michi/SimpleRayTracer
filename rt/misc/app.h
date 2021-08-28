@@ -40,11 +40,12 @@ namespace rt
          *  @brief Tests if a ray intersects with a primitive in the scene..
          *  @param[in] ray: The ray that is tested if it intersects with a primitive.
          *  @param[in] t_max: The maximum length of the ray. Similar to the render distance.
-         *  @param[in] flags: Can change the way how intersection is calculated.
+         *  @param[in] cull_mask: Back- and/or front-face culling.
+         *  @param[out] hit_info: Information about the ray-hit.
          *  @param[out] hit_prim: The primitive that the ray intersected with.
          *  @return The length of the ray-origin to the closest intersection point.
          */
-        float intersection(const rt::ray_t& ray, float t_max, int flags, const rt::Primitive** hit_prim);
+        float intersection(const rt::ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info, const rt::Primitive** hit_prim);
 
         /**
         *   @brief Converts floating-point color to uint8_t-color value.
@@ -87,9 +88,10 @@ namespace rt
          *  @param[in] ray: Ray to be traced.
          *  @param[in] recursions: The number of recursions to be called.
          *  @param[in] t_max: Maximum length the ray is allowed to have.
+         *  @param[in] cull_mask: Back- and/or front-face culling.
          *  @param[out] ray_payload: Ray tracing payload.
          */
-        void trace_ray(const ray_t& ray, int recursions, float t_max, void* ray_payload);
+        void trace_ray(const ray_t& ray, int recursions, float t_max, RayCullMask cull_mask, void* ray_payload);
 
         /**
          *  @brief This shader gets called for every pixel and is used calculate
@@ -107,10 +109,11 @@ namespace rt
          *  @param[in] recursion: The actual recursion of the ray-tracing process.
          *  @param[in] t: The length of the vector from origin to the intersection.
          *  @param[in] t_max: The maximum length of any ray.
+         *  @param[in] hit_info: Information about the ray-hit.
          *  @param[in] hit_prim: The primitive that the ray intersected with.
          *  @param[out] ray_payload: Ray tracing payload.
          */
-        virtual void closest_hit_shader(const ray_t& ray, int recursion, float t, float t_max, const Primitive* hit, void* ray_payload) = 0;
+        virtual void closest_hit_shader(const ray_t& ray, int recursion, float t, float t_max, const Primitive* hit, RayHitInformation hit_info, void* ray_payload) = 0;
 
         /**
          *  @brief This shader gets called if there is no intersection with any object in the scene.

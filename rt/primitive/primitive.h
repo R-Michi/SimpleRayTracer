@@ -47,13 +47,14 @@ namespace rt
 
         /**
          *  @brief Executes the intersection test for the current primitive.
-         *  @param[in] ray: The ray that is tested if it intersects with a primitive.
+         *  @param[in] ray: The ray that is tested if it intersects with the primitive.
          *  @param[in] t_max: The maximum length of the ray. Similar to the render distance.
-         *  @param[in] flags: Can change the way how intersection is calculated.
+         *  @param[in] cull_mask: Back- and / or front-side culling.
+         *  @param[out] hit information
          *  @return The length from the ray-origin to the closest intersection point.
          *  The length caps at @param t_max if the ray does not intersect with any geometry.
          */
-        virtual float intersect(const ray_t& ray, float t_max, int flags) const = 0;
+        virtual float intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const = 0;
 
         /**
          *  @brief Calculates the distance from a 3D-point P to the current primitive.

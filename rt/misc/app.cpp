@@ -29,7 +29,7 @@ RayTracer::~RayTracer(void) noexcept
 {
 }
 
-float RayTracer::intersection(const rt::ray_t& ray, float t_max, int flags, const rt::Primitive** hit_prim)
+float RayTracer::intersection(const rt::ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info, const rt::Primitive** hit_prim)
 {
     float t = t_max;
     const size_t bs = this->rt_geometry_buffer_count();
@@ -48,13 +48,15 @@ float RayTracer::intersection(const rt::ray_t& ray, float t_max, int flags, cons
             if(map[p] != nullptr)
             {
                 // test for intersection...
-                const float t_cur = map[p]->intersect(ray, t_max, flags);
+                uint32_t _hit_info;
+                const float t_cur = map[p]->intersect(ray, t_max, cull_mask, _hit_info);
                 // and return the closest hit.
                 if(t_cur < t)
                 {
                     if(hit_prim != nullptr)
                         *hit_prim = map[p];
                     t = t_cur;
+                    hit_info = _hit_info;
                 }
             }
         }
@@ -62,14 +64,15 @@ float RayTracer::intersection(const rt::ray_t& ray, float t_max, int flags, cons
     return t;
 }
 
-void RayTracer::trace_ray(const ray_t& ray, int recursions, float t_max, void* ray_payload)
+void RayTracer::trace_ray(const ray_t& ray, int recursions, float t_max, RayCullMask cull_mask, void* ray_payload)
 {
     if (recursions == 0) return;
 
     const Primitive* hit_prim = nullptr;
-    float t = this->intersection(ray, t_max, 0, &hit_prim);
+    uint32_t hit_info;
+    float t = this->intersection(ray, t_max, cull_mask, hit_info, &hit_prim);
 
-    if(t < t_max)   this->closest_hit_shader(ray, recursions, t, t_max, hit_prim, ray_payload);
+    if (t < t_max)  this->closest_hit_shader(ray, recursions, t, t_max, hit_prim, hit_info, ray_payload);
     else            this->miss_shader(ray, recursions, t_max, ray_payload);
 }
 

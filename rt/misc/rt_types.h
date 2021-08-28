@@ -13,10 +13,13 @@
 
 #include <glm/glm.hpp>
 
-#define RT_INTERSECTION_CONSIDER_INSIDE 0x0001
-
 namespace rt
 {
+    // ================ TYPE DEFINITIONS ================
+
+    using RayHitInformation = uint32_t;
+    using RayCullMask = uint32_t;
+
     // ================ CLASSES ================
     class PrimitiveAttribute
     {
@@ -59,6 +62,20 @@ namespace rt
     };
 
     // ================ ENUMS ================
+    enum RayHitInformationBits : uint32_t
+    {
+        RT_HIT_INFO_NONE = 0x0,
+        RT_HIT_INFO_FRONT_BIT = 0x1,
+        RT_HIT_INFO_BACK_BIT = 0x2
+    };
+
+    enum RayCullMaskBits
+    {
+        RT_CULL_MASK_NONE = 0x0,
+        RT_CULL_MASK_FRONT_BIT = 0x1,
+        RT_CULL_MASK_BACK_BIT = 0x2
+    };
+
     enum Filter : uint32_t
     {
         RT_FILTER_NEAREST = 0,

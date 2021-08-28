@@ -40,7 +40,7 @@ namespace rt
         virtual ~DistanceSphere(void) noexcept {}
 
         /** @brief Intersection test for ray - sphere - intersection. */
-        virtual float intersect(const ray_t& ray, float t_max, int flags) const;
+        virtual float intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const;
 
         /** @return A dynamic clone of the distance sphere. */
         virtual Primitive* clone_dynamic(void)

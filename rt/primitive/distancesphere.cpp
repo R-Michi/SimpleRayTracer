@@ -29,9 +29,9 @@ DistanceSphere::DistanceSphere(const DistanceSphere& sphere) noexcept
 DistanceSphere::DistanceSphere(DistanceSphere&& sphere) noexcept
 : Sphere(sphere) {}
 
-float DistanceSphere::intersect(const ray_t& ray, float t_max, int flags) const
+float DistanceSphere::intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const
 {
     const float d = glm::length(this->_center - ray.origin) - this->_radius;
     // early test if the whole sphere is out of the render distance
-    return (d < t_max) ? _intersect(ray, t_max, flags) : t_max;
+    return (d < t_max) ? _intersect(ray, t_max, cull_mask, hit_info) : t_max;
 }

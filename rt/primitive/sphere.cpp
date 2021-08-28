@@ -11,6 +11,7 @@
 
 
 #include "sphere.h"
+#include <iostream>
 
 using namespace rt;
 
@@ -82,7 +83,7 @@ void Sphere::set_radius(float radius) noexcept
     this->_radius = radius;
 }
 
-float Sphere::_intersect(const ray_t& ray, float t_max, int flags) const
+float Sphere::_intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const
 {
     /*  The intersecion point is a quadratic function: ax^2 + bx + c = 0
         These following lines calculate the parameter a, b, c of that function 
@@ -92,6 +93,7 @@ float Sphere::_intersect(const ray_t& ray, float t_max, int flags) const
     const float b       = 2 * glm::dot(ray.direction, oc);
     const float c       = glm::dot(oc, oc) - this->_radius * this->_radius;
     const float delta   = b*b - 4*c;
+    hit_info = 0x0;
 
     // if ray intersects with the sphere
     if(delta >= 0.0f)
@@ -122,18 +124,25 @@ float Sphere::_intersect(const ray_t& ray, float t_max, int flags) const
          */
         if(t0 < t_max)
         {
-            if(t0 >= 0.0f && t1 >= 0.0f)                                                // in front of the sphere
+            if (!(cull_mask & RT_CULL_MASK_FRONT_BIT) && t0 >= 0.0f && t1 >= 0.0f)       // in front of the sphere
+            {
+                hit_info |= RT_HIT_INFO_FRONT_BIT;
                 return t0;
-            else if(flags & RT_INTERSECTION_CONSIDER_INSIDE && t0 < 0.0f && t1 >= 0.0f) // within the sphere
+            }
+            else if (!(cull_mask & RT_CULL_MASK_BACK_BIT) && t0 < 0.0f && t1 >= 0.0f)   // within the sphere
+            {
+                hit_info |= RT_HIT_INFO_BACK_BIT;
                 return t1;
+            }
         }
+        hit_info = RT_HIT_INFO_NONE;
     }
     return t_max;
 }
 
-float Sphere::intersect(const ray_t& ray, float t_max, int flags) const
+float Sphere::intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const
 {
-    return this->_intersect(ray, t_max, flags);
+    return this->_intersect(ray, t_max, cull_mask, hit_info);
 }
 
 float Sphere::distance(const glm::vec3& p) const

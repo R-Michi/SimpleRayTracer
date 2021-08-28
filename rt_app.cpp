@@ -1,6 +1,7 @@
 /**
 * @file     rt_app.cpp
 * @brief    Source file for the ray-tracing test application.
+*           In this file I am experimenting with ray tracing.
 * @author   Michael Reim / Github: R-Michi
 * Copyright (c) 2021 by Michael Reim
 *
@@ -15,6 +16,74 @@
 #include <omp.h>
 #include <stdexcept>
 
+#include <iostream>
+#include <chrono>
+
+inline uint32_t float2bits(float x)
+{
+    uint32_t i;
+    memcpy(&i, &x, sizeof(float));
+    return i;
+}
+
+inline float bits2float(uint32_t x)
+{
+    float f;
+    memcpy(&f, &x, sizeof(uint32_t));
+    return f;
+}
+
+float next_float_up(float x)
+{
+    // 2 special cases:
+    // if x is positive infinity, then the value can't be incremented any further and it is returned unchanged
+    // if x is negative 0, change it to positive 0, as negative 0 has a different memory representation
+    if (std::isinf(x) && x > 0.0f)
+        return x;
+    if (x == -0.0f)
+        x = 0.0f;
+
+    // advance x to the next higher float
+    // this can only be done because of the memory representation of the IEEE754 standard
+    uint32_t i = float2bits(x);
+    if (x >= 0) ++i;
+    else        --i;
+    return bits2float(i);
+}
+
+float next_float_down(float x)
+{
+    // is the same as next_float_up but in reverse
+    if (std::isinf(x) && x < 0.0f)
+        return x;
+    if (x == 0.0f)
+        x = -0.0f;
+
+    uint32_t i = float2bits(x);
+    if (x <= 0) ++i;
+    else        --i;
+    return bits2float(i);
+}
+
+inline glm::vec3 offset_ray_origin(const glm::vec3& p, const glm::vec3& n, const glm::vec3& w)
+{
+    float d = 2e-4f;
+    glm::vec3 offset = d * n;
+    if (dot(w, n) < 0)
+        offset = -offset;
+    glm::vec3 po = p + offset;
+
+    if (offset.x > 0)       po.x = next_float_up(po.x);
+    else if (offset.x < 0)  po.x = next_float_down(po.x);
+    if (offset.y > 0)       po.y = next_float_up(po.y);
+    else if (offset.y < 0)  po.y = next_float_down(po.y);
+    if (offset.z > 0)       po.z = next_float_up(po.z);
+    else if (offset.z < 0)  po.z = next_float_down(po.z);
+
+    return po;
+}
+
+
 RT_Application::RT_Application(void)
 {
     this->light =
@@ -27,7 +96,7 @@ RT_Application::RT_Application(void)
     {
         rt::Sphere
         (
-            {0.0f, 0.0f, 3.0f},
+            {0.0f, 0.0f, 5.0f},
             1.0f,
             Material(glm::vec3(0.0f, 0.0f, 1.0f), 0.5f, 0.8f, 1.0f)
         ),
@@ -112,7 +181,7 @@ RT_Application::RT_Application(void)
     rt::Buffer buff(buffer_layout);
     buff.data(0, 3, spheres);
 
-    this->set_num_threads(omp_get_max_threads() * 2);
+    this->set_num_threads(1);
     this->set_framebuffer(fbo_ci);
     this->clear_color(0.0f, 0.0f, 0.0f);
     this->draw_buffer(buff);
@@ -180,8 +249,8 @@ glm::vec3 RT_Application::ray_generation_shader(uint32_t x, uint32_t y)
     float ndc_x = gl::convert::from_pixels_pos_x(x, this->rt_dimensions().x) * this->rt_ratio();
     float ndc_y = gl::convert::from_pixels_pos_y(y, this->rt_dimensions().y);
 
-    glm::vec3 origin    = {0.0f, 0.0f, -5.0f};                                              // origin of the camera
-    glm::vec3 look_at   = {2.0f, 0.0f, 0.0f};                                               // direction/point the camere is looking at
+    glm::vec3 origin    = {0.0f, -0.99f, 0.0f};                                              // origin of the camera
+    glm::vec3 look_at   = {0.0f, -1.0f, 1.0f};                                               // direction/point the camere is looking at
 
     glm::vec3 cam_z     = glm::normalize(look_at - origin);                                 // z-direction of the camera
     glm::vec3 cam_x     = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cam_z));   // x-diretion of the camera
@@ -193,66 +262,44 @@ glm::vec3 RT_Application::ray_generation_shader(uint32_t x, uint32_t y)
     ray.direction = glm::normalize(ndc_x * cam_x + ndc_y * cam_y + 1.5f * cam_z);                   // rotated intersection with the image plane
 
     // render the image in hdr
-    glm::vec3 hdr_color;
-    trace_ray(ray, 5, 100.0f, &hdr_color);                                                  // begin ray-tracing process                              
+    glm::vec3 hdr_color(0.0f);
+    trace_ray(ray, RT_RECURSIONS, 100.0f, rt::RT_CULL_MASK_NONE, &hdr_color);                                                  // begin ray-tracing process                              
     glm::vec3 ldr_color = hdr_color / (hdr_color + glm::vec3(1.0f));                        // convert to ldr
 
     return ldr_color;
 }
 
-void RT_Application::closest_hit_shader(const rt::ray_t& ray, int recursion, float t, float t_max, const rt::Primitive* hit, void* ray_payload)
+void RT_Application::closest_hit_shader(const rt::ray_t& ray, int recursion, float t, float t_max, const rt::Primitive* hit, rt::RayHitInformation hit_info, void* ray_payload)
 {
-    glm::vec3 out_color;                                                                    // output/result color
+    rt::Sphere* hit_sphere = (rt::Sphere*)hit;
+    glm::vec3* out_color = (glm::vec3*)ray_payload;
 
-    const rt::Sphere* hit_sphere = dynamic_cast<const rt::Sphere*>(hit);
-    if (hit_sphere == nullptr)
-        *((glm::vec3*)ray_payload) = glm::vec3(0.0f);
-    const Material* mtl = reinterpret_cast<const Material*>(hit_sphere->attribute());
-    if(mtl == nullptr)
-        *((glm::vec3*)ray_payload) = glm::vec3(0.0f);
+    glm::vec3 intersection = ray.origin + (t) * ray.direction;  // prevent self-intersection
+    const glm::vec3 normal = glm::normalize(intersection - hit_sphere->center());
+    const glm::vec3 view = -ray.direction;
 
-    glm::vec3 I = ray.origin + (t + 0.0001f) * ray.direction;                               // intersection point
-    glm::vec3 N = glm::normalize(I - hit_sphere->center());                                 // surface's normal vector at the intersection point
+    glm::vec3 color(0.0f);
 
-    // combute absorption
-    glm::vec3 light_intensity = glm::vec3(1.0f);   // combute surface's light intensity
+    glm::vec3 refract_normal;
+    float n;
+    rt::RayCullMask cull_mask = rt::RT_CULL_MASK_NONE;
+    if (hit_info & rt::RT_HIT_INFO_FRONT_BIT)
+    {
+        refract_normal = normal;
+        n = 1.0f / 1.5f; 
+    }
+    else if (hit_info & rt::RT_HIT_INFO_BACK_BIT)
+    {
+        refract_normal = -normal;
+        n = 1.5f;
+    }
 
-    // combute shadow
-    rt::ray_t shadow_ray = {I, this->light.direction};
-    float shadow_value = 0.0f;
-    if(glm::dot(this->light.direction, N) > 0.0f)
-        shadow_value = this->shadow(shadow_ray, t_max, 10.0f);
-
-    glm::vec3 absorb_light = mtl->albedo() * 0.3f + light_intensity * shadow_value; // final aborbed light intensity
-
-    // combute reflection
-    rt::ray_t reflect_ray     = {I, glm::normalize(glm::reflect(ray.direction, N))};      // let the incoming light ray reflect around the surface's normal vector
-    glm::vec3 reflect_light; 
-    trace_ray(reflect_ray, recursion - 1, t_max, &reflect_light);                       // trace the reflected ray
-
-    // combute refraction
-    static constexpr float n_air        = 1.0f;                                         // refraction index of air
-    static constexpr float n_glass      = 1.52f;                                        // refraction index of glass
-    static constexpr float n_ratio      = n_air / n_glass;
-    static constexpr float n_ratio_inv  = n_glass / n_air;
-
-    rt::ray_t refract_ray = {I, glm::refract(ray.direction, N, n_ratio)};                 // let the incoming light ray refract at the entrance of the sphere
-
-    float t_back        = hit->intersect(refract_ray, t_max, RT_INTERSECTION_CONSIDER_INSIDE);      // back-side intersecion
-    glm::vec3 i_back    = refract_ray.origin + (t_back - 0.0001f) * refract_ray.direction;          // intersection point of the back-side
-    glm::vec3 n_back    = glm::normalize(hit_sphere->center() - i_back);                            // surface's normal vector at the back-side intersection point
-
-    refract_ray.direction   = glm::refract(refract_ray.direction, n_back, n_ratio_inv); // let the light ray refract a second time at the outrance of the sphere
-    refract_ray.origin      = i_back;
-    glm::vec3 refract_light;
-    trace_ray(refract_ray, recursion - 1, t_max, &refract_light);                       // trace the refracted ray
-
-    // calculate final color result -> A + R + T = 100%
-    const float absorb  = mtl->roughness();
-    const float reflect = 1.0f - mtl->roughness();
-
-    out_color = mtl->opacity() * (absorb * absorb_light + reflect * reflect_light) + (1.0f - mtl->opacity()) * refract_light;
-    *((glm::vec3*)ray_payload) = out_color;
+    rt::ray_t _sample_ray;
+    _sample_ray.direction = glm::reflect(ray.direction, normal);
+    //_sample_ray.direction = glm::refract(ray.direction, refract_normal, n);
+    _sample_ray.origin = offset_ray_origin(intersection, normal, _sample_ray.direction);
+    this->trace_ray(_sample_ray, recursion-1, t_max, cull_mask, &color);
+    *out_color = color;
 }
 
 void RT_Application::miss_shader(const rt::ray_t& ray, int recursuon, float t_max, void* ray_payload)

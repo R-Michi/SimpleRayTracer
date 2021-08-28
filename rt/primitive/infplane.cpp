@@ -84,7 +84,7 @@ void InfPlane::set_origin(const glm::vec3& origin) noexcept
     this->_origin = origin;
 }
 
-float InfPlane::intersect(const ray_t& ray, float t_max, int flags) const
+float InfPlane::intersect(const ray_t& ray, float t_max, RayCullMask cull_mask, RayHitInformation& hit_info) const
 {
     const float denom = glm::dot(this->_direction, ray.direction);
     // If the denominator is smaller or equal 0.0 then the intersection point is infinitely far away.
