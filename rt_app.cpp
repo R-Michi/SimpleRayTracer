@@ -33,7 +33,7 @@ inline float bits2float(uint32_t x)
     return f;
 }
 
-float next_float_up(float x)
+inline float next_float_up(float x)
 {
     // 2 special cases:
     // if x is positive infinity, then the value can't be incremented any further and it is returned unchanged
@@ -51,7 +51,7 @@ float next_float_up(float x)
     return bits2float(i);
 }
 
-float next_float_down(float x)
+inline float next_float_down(float x)
 {
     // is the same as next_float_up but in reverse
     if (std::isinf(x) && x < 0.0f)
@@ -96,7 +96,7 @@ RT_Application::RT_Application(void)
     {
         rt::Sphere
         (
-            {0.0f, 0.0f, 5.0f},
+            {0.0f, 5.0f, 10000.0f},
             1.0f,
             Material(glm::vec3(0.0f, 0.0f, 1.0f), 0.5f, 0.8f, 1.0f)
         ),
@@ -108,7 +108,7 @@ RT_Application::RT_Application(void)
         ),
         rt::Sphere
         (
-            {-1.75f, -1001.0f, 3.0f},
+            {0.0f, -1005.0f, 10000.0f},
             1000.0f,
             Material(glm::vec3(1.0f, 1.0f, 1.0f), 0.5f, 0.8f, 1.0f)
         )
@@ -249,8 +249,8 @@ glm::vec3 RT_Application::ray_generation_shader(uint32_t x, uint32_t y)
     float ndc_x = gl::convert::from_pixels_pos_x(x, this->rt_dimensions().x) * this->rt_ratio();
     float ndc_y = gl::convert::from_pixels_pos_y(y, this->rt_dimensions().y);
 
-    glm::vec3 origin    = {0.0f, -0.99f, 0.0f};                                              // origin of the camera
-    glm::vec3 look_at   = {0.0f, -1.0f, 1.0f};                                               // direction/point the camere is looking at
+    glm::vec3 origin    = {0.0f, 0.0f, 10010.0f};                                              // origin of the camera
+    glm::vec3 look_at   = {0.0f, 0.0f, 10000.0f};                                               // direction/point the camere is looking at
 
     glm::vec3 cam_z     = glm::normalize(look_at - origin);                                 // z-direction of the camera
     glm::vec3 cam_x     = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cam_z));   // x-diretion of the camera
@@ -298,6 +298,7 @@ void RT_Application::closest_hit_shader(const rt::ray_t& ray, int recursion, flo
     _sample_ray.direction = glm::reflect(ray.direction, normal);
     //_sample_ray.direction = glm::refract(ray.direction, refract_normal, n);
     _sample_ray.origin = offset_ray_origin(intersection, normal, _sample_ray.direction);
+    //_sample_ray.origin = intersection;
     this->trace_ray(_sample_ray, recursion-1, t_max, cull_mask, &color);
     *out_color = color;
 }

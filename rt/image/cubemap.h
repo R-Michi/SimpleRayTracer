@@ -61,7 +61,7 @@ namespace rt
         *   @param[in] direction: sample direction
         *   @return Color of the sample.
         */
-        virtual glm::vec4 sample(const glm::vec3& direction)
+        virtual glm::vec4 sample(const glm::vec3& direction) const
         {
             /* GET UV COORDINATES */
             const glm::vec3 abs_dir = glm::abs(direction);

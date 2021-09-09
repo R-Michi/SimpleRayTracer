@@ -26,3 +26,6 @@ https://github.com/R-Michi/SimpleRayTracer/issues
 #version 1.1.0 | 2021-08-24
 - added hit information for spheres
 - added cull masking for spheres
+
+#version 1.1.1 | 2021-09-09
+- marked sample methods of texture const

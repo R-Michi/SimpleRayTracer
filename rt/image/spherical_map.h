@@ -25,7 +25,7 @@ namespace rt
         : Texture2D<T_src, T_dst>(filter, border_color) {}
         virtual ~SphericalMap(void) {}
 
-        virtual vec_ret sample(const glm::vec4& direction)
+        virtual vec_ret sample(const glm::vec4& direction) const
         {
             constexpr static glm::vec2 inv_atan(0.1591f, 0.3183);
             glm::vec2 uv(atan2(direction.x, direction.z), asin(direction.y));

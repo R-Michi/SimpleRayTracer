@@ -102,7 +102,7 @@ namespace rt
         *   @param[in] pos: pixel-coordinate
         *   @param[out] color: color of the pixel
         */
-        void _sample_px(const glm::uvec4& pos, vec_ret& color) noexcept
+        void _sample_px(const glm::uvec4& pos, vec_ret& color) const noexcept
         {
             glm::uvec4 _pos;
             this->combute_address_mode(pos, _pos);
@@ -158,7 +158,7 @@ namespace rt
         *   @praram[in] pos: uvw-coordinate
         *   @param[out] color: Color of the sample.
         */
-        void _sample(const glm::vec4& pos, vec_ret& color) noexcept
+        void _sample(const glm::vec4& pos, vec_ret& color) const noexcept
         {
             alignas(16) glm::uvec4 px_pos;
             alignas(16) glm::vec4 interpos;
@@ -326,7 +326,7 @@ namespace rt
         *   @return Color of the sample.
         *   NOTE: This method can be inheritated and overwritten.
         */
-        virtual vec_ret sample(const glm::vec4& pos)
+        virtual vec_ret sample(const glm::vec4& pos) const
         {
             vec_ret color;
             this->_sample(pos, color);
